@@ -9,7 +9,7 @@ plugins {
 sourceCompatibility = JavaVersion.VERSION_14
 targetCompatibility = JavaVersion.VERSION_14
 
-version = '0.0.1'
+version = project.findProperty('version')
 group = 'org.markwoon'
 
 
