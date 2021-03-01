@@ -1,0 +1,64 @@
+plugins {
+  id 'java'
+  id 'application'
+  // javafx plugin must come before jlink plugin
+  id 'org.openjfx.javafxplugin' version '0.0.9'
+  id 'org.beryx.jlink' version '2.23.3'
+}
+
+sourceCompatibility = JavaVersion.VERSION_14
+targetCompatibility = JavaVersion.VERSION_14
+
+version = '0.0.1'
+group = 'org.markwoon'
+
+
+
+repositories {
+  jcenter()
+}
+
+dependencies {
+  implementation group: 'com.google.guava', name: 'guava', version: '30.1-jre'
+  implementation group: 'org.checkerframework', name: 'checker-qual', version: '3.10.0'
+  implementation group: 'org.jsoup', name: 'jsoup', version: '1.13.1'
+}
+
+
+java {
+  modularity.inferModulePath = true
+}
+
+// workaround for https://github.com/java9-modularity/gradle-modules-plugin/issues/165
+modularity.disableEffectiveArgumentsAdjustment()
+
+javafx {
+  version = "14"
+  modules = [ 'javafx.controls', 'javafx.fxml']
+}
+
+application {
+  mainModule    = 'org.markwoon.nations'
+  mainClassName = 'org.markwoon.nations.TournamentTool'
+}
+
+jlink {
+  options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+  launcher {
+    name = 'TournamentTool'
+    noConsole = true
+  }
+  jpackage {
+    appVersion = version
+
+    if (org.gradle.internal.os.OperatingSystem.current().windows) {
+      installerType = 'msi'
+      imageOptions = ['--icon', 'src/main/assets/marie_curie.ico']
+      installerOptions = ['--win-menu', '--win-shortcut', '--win-upgrade-uuid', UUID.randomUUID().toString()]
+    }
+    if (org.gradle.internal.os.OperatingSystem.current().macOsX) {
+      installerType = 'pkg'
+      imageOptions = ['--icon', 'src/main/assets/marie_curie.icns']
+    }
+  }
+}
