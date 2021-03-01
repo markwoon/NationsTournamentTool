@@ -1,6 +1,6 @@
 {
   "name": "nations-tournament-tool",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/markwoon/NationsTournamentTool.git"
@@ -25,7 +25,9 @@
         {
           "replacements": [
             {
-              "files": ["gradle.properties"],
+              "files": [
+                "gradle.properties"
+              ],
               "from": "version=.*",
               "to": "version=${nextRelease.version}",
               "results": [
@@ -62,7 +64,9 @@
         "@semantic-release/git",
         {
           "assets": [
-            "gradle.properties"
+            "gradle.properties",
+            "package.json",
+            "CHANGELOG.md"
           ]
         }
       ]
