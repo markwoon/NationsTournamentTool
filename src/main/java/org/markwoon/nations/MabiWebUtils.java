@@ -35,6 +35,12 @@ public class MabiWebUtils {
       .omitEmptyStrings();
   private static final Splitter sf_spaceSplitter = Splitter.on(" ").trimResults()
       .omitEmptyStrings();
+  // maximum allowed days is 30
+  private static final String sf_finishedGamesUrl =
+      "http://www.mabiweb.com/modules.php?name=Game_Manager&op=completed_games&gm_type=10&days=30";
+  // maximum allowed days is 30
+  private static final String sf_runningGamesUrl =
+      "http://www.mabiweb.com/modules.php?name=Game_Manager&op=running_games&gm_type=10&days=30";
 
 
   /**
@@ -53,9 +59,9 @@ public class MabiWebUtils {
 
     String url;
     if (finished) {
-      url = "http://www.mabiweb.com/modules.php?name=Game_Manager&op=completed_games&gm_type=10";
+      url = sf_finishedGamesUrl;
     } else {
-      url = "http://www.mabiweb.com/modules.php?name=Game_Manager&op=running_games&gm_type=10";
+      url = sf_runningGamesUrl;
     }
     Document doc = Jsoup.connect(url)
         .get();
@@ -127,8 +133,11 @@ public class MabiWebUtils {
    * Gets the details of all games.
    */
   public static void getGameDetails(SortedMap<String, Game> games) throws IOException {
+    LastUpdatedHelper lastUpdatedHelper = new LastUpdatedHelper();
     for (String key : games.keySet()) {
-      getGameDetails(games.get(key));
+      Game game = games.get(key);
+      getGameDetails(game);
+      lastUpdatedHelper.updateLastUpdated(game);
     }
   }
 
@@ -366,5 +375,47 @@ public class MabiWebUtils {
       }
     }
     return games;
+  }
+
+
+  /**
+   *
+   */
+  private static class LastUpdatedHelper {
+    private Document m_finishedGames;
+    private Document m_runningGames;
+
+    LastUpdatedHelper() throws IOException {
+      initialize();
+    }
+
+    private void initialize() throws IOException {
+      m_finishedGames = Jsoup.connect(sf_finishedGamesUrl)
+          .get();
+      m_runningGames = Jsoup.connect(sf_runningGamesUrl)
+          .get();
+    }
+
+    void updateLastUpdated(Game game) throws IOException {
+      if (!doUpdate(game.isFinished() ? m_finishedGames : m_runningGames, game)) {
+        // if can't find the first time, re-initialize and look again in case game ended
+        // since the data was cached
+        initialize();
+        doUpdate(game.isFinished() ? m_finishedGames : m_runningGames, game);
+      }
+    }
+
+    private boolean doUpdate(Document doc, Game game) throws IOException {
+      for (Element tr : doc.select("#gamemanager-gamelists > table > tbody > tr")) {
+        Elements tds = tr.select("td");
+        String name = tds.get(2).text();
+        if (name.startsWith(game.getName())) {
+          String lastUpdate = tds.get(5).text();
+          game.setLastUpdated(calculateTimestamp(lastUpdate));
+          return true;
+        }
+      }
+      return false;
+    }
   }
 }
