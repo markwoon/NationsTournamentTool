@@ -1,10 +1,12 @@
 package org.markwoon.nations.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.google.common.collect.ComparisonChain;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 
@@ -13,9 +15,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class Game {
   public static final String ROUND_FINISHED = "finished";
+  private static final Pattern sf_gameGroupPattern = Pattern.compile("- Group ([A-Z]) -");
   private static final Pattern sf_roundPattern = Pattern.compile("\\w+ \\((.*)\\) - ([AB])");
   private final String id;
   private final String name;
+  private String group;
   private List<String> players;
   private String round;
   private String lastUpdated;
@@ -23,11 +27,18 @@ public class Game {
   private final Map<String, String> countries = new HashMap<>();
   private final Map<String, Integer> scores = new HashMap<>();
   private final Map<String, Integer> unusedWorkers = new HashMap<>();
+  private final Map<String, Float> points = new HashMap<>();
 
 
   public Game(String id, String name) {
     this.id = id;
     this.name = name;
+    Matcher m = sf_gameGroupPattern.matcher(name);
+    if (m.find()) {
+      group = m.group(1);
+    } else {
+      throw new IllegalArgumentException("Game name doesn't have valid group");
+    }
   }
 
 
@@ -37,6 +48,10 @@ public class Game {
 
   public String getName() {
     return name;
+  }
+
+  public String getGroup() {
+    return group;
   }
 
 
@@ -75,6 +90,9 @@ public class Game {
   }
 
 
+  /**
+   * Gets players in turn order.
+   */
   public List<String> getPlayers() {
     return players;
   }
@@ -84,12 +102,14 @@ public class Game {
   }
 
 
-
-  public String getActivePlayer() {
+  /**
+   * Gets current player (null if game is over).
+   */
+  public @Nullable String getActivePlayer() {
     return activePlayer;
   }
 
-  public void setActivePlayer(String activePlayer) {
+  public void setActivePlayer(@Nullable String activePlayer) {
     this.activePlayer = activePlayer;
   }
 
@@ -129,6 +149,47 @@ public class Game {
     scores.put(player, score);
   }
 
+  public float getPoints(String player) {
+    return points.get(player);
+  }
+
+  /**
+   * Calculates tournament points for players.
+   */
+  public void calculatePoints() {
+    if (isFinished()) {
+      List<Object[]> scoreData = new ArrayList<>();
+      int total = 0;
+      int order = 0;
+      for (String p : players) {
+        total += scores.get(p);
+        order += 1;
+        scoreData.add(new Object[]{ p, scores.get(p), order });
+      }
+      scoreData.sort((o1, o2) -> {
+        int score1 = (Integer)o1[1];
+        int score2 = (Integer)o2[1];
+        int order1 = (Integer)o1[2];
+        int order2 = (Integer)o2[2];
+        return ComparisonChain.start()
+            .compare(score2, score1)
+            .compare(order1, order2)
+            .result();
+      });
+      int place = 0;
+      for (Object[] data : scoreData) {
+        place += 1;
+        int bonus = 0;
+        if (place == 0) {
+          bonus = 10;
+        } else if (place == 1) {
+          bonus = 5;
+        }
+        float score = ((Integer)data[1] / (float)total * 100) + bonus;
+        points.put((String)data[0], score);
+      }
+    }
+  }
 
   @Override
   public String toString() {

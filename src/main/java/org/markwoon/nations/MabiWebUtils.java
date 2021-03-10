@@ -5,23 +5,25 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ComparisonChain;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 import org.markwoon.nations.model.Game;
+import org.markwoon.nations.model.PlayerPoints;
 
 
 /**
@@ -157,20 +159,12 @@ public class MabiWebUtils {
       // round
       game.setRound(Game.ROUND_FINISHED);
 
-      // players  and score
+      // players and score
       Matcher m = sf_playerFinalScorePattern.matcher(headerPlayerInfo);
       List<String[]> playerData = new ArrayList<>();
       while (m.find()) {
         playerData.add(new String[] { m.group(1), m.group(2) });
       }
-      playerData.sort((o1, o2) -> {
-        int a = Integer.parseInt(o1[1]);
-        int b = Integer.parseInt(o2[1]);
-        return ComparisonChain.start()
-            .compare(a, b)
-            .compare(o1[0], o2[0])
-            .result();
-      });
       List<String> players = new ArrayList<>();
       for (String[] p : playerData) {
         players.add(p[0]);
@@ -235,7 +229,10 @@ public class MabiWebUtils {
   public static void writeTsv(SortedMap<String, Game> games, Path file) throws IOException {
 
     try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(file))) {
-      writer.println("Game ID\tGame Name\tRound\tLast Updated\tPlayer 1\tPlayer 2\tPlayer 3");
+      DecimalFormat df = new DecimalFormat();
+      df.setMaximumFractionDigits(2);
+      SortedMap<String, SortedMap<String, PlayerPoints>> totalPoints = new TreeMap<>();
+      writer.println("Game ID\tGame Name\tRound\tLast Updated\tPlayer 1\tPlayer 2\tPlayer 3\tTournament Points");
       for (String name : games.keySet()) {
         Game game = games.get(name);
         writer.print(game.getId());
@@ -257,9 +254,45 @@ public class MabiWebUtils {
               writer.print(game.getScore(player) + "vp)");
             }
           }
+          if (game.isFinished()) {
+            game.calculatePoints();
+            StringBuilder builder = new StringBuilder();
+            for (String player : game.getPlayers()) {
+              if (builder.length() > 0) {
+                builder.append(", ");
+              }
+              float points = game.getPoints(player);
+              builder.append(player)
+                  .append(" (")
+                  .append(df.format(points))
+                  .append(")");
+
+              SortedMap<String, PlayerPoints> groupMap = totalPoints
+                  .computeIfAbsent(game.getGroup(), g -> new TreeMap<>());
+              PlayerPoints playerPoints = groupMap.computeIfAbsent(player, PlayerPoints::new);
+              playerPoints.addPoints(points);
+            }
+
+            writer.print("\t");
+            writer.print(builder.toString());
+          }
         }
         writer.println();
       }
+      writer.println();
+      for (String group : totalPoints.keySet()) {
+        writer.print("\t\t\t\t\t\tGroup " + group);
+        boolean started = false;
+        for (PlayerPoints pp : new TreeSet<>(totalPoints.get(group).values())) {
+          if (started) {
+            writer.println("\t\t\t\t\t\t\t" + pp);
+          } else {
+            writer.println("\t" + pp);
+            started = true;
+          }
+        }
+      }
+      writer.println();
     }
   }
 
