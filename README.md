@@ -9,7 +9,7 @@ This tool expects tournament game names in the following syntax:  `[prefix] - Gr
 
 For example, `7.Small Tournament - Group A - Game 105`.
 
-Each game should have 3 players.
+Before running the tool, all games for the tournament should already be created. Each game should have 3 players.
 
 The tool has two tabs:  
 
