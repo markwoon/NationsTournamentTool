@@ -30,6 +30,7 @@ import org.markwoon.nations.model.PlayerPoints;
  * @author Mark Woon
  */
 public class MabiWebUtils {
+  private static final int sf_numPlayers = 3;
   private static final Splitter sf_commaSplitter = Splitter.on(",").trimResults()
       .omitEmptyStrings();
   private static final Splitter sf_spaceSplitter = Splitter.on(" ").trimResults()
@@ -232,7 +233,11 @@ public class MabiWebUtils {
       DecimalFormat df = new DecimalFormat();
       df.setMaximumFractionDigits(2);
       SortedMap<String, SortedMap<String, PlayerPoints>> totalPoints = new TreeMap<>();
-      writer.println("Game ID\tGame Name\tRound\tLast Updated\tPlayer 1\tPlayer 2\tPlayer 3\tTournament Points");
+      writer.print("Game ID\tGame Name\tRound\tLast Updated\t");
+      for (int x = 0; x < sf_numPlayers; x += 1) {
+        writer.print("Player " + (x + 1) + "\t");
+      }
+      writer.println("Tournament Points");
       for (String name : games.keySet()) {
         Game game = games.get(name);
         writer.print(game.getId());
@@ -254,7 +259,7 @@ public class MabiWebUtils {
               writer.print(game.getScore(player) + "vp)");
             }
           }
-          if (game.isFinished()) {
+          if (game.isFinished() && game.hasScores()) {
             game.calculatePoints();
             StringBuilder builder = new StringBuilder();
             for (String player : game.getPlayers()) {
@@ -292,7 +297,6 @@ public class MabiWebUtils {
           }
         }
       }
-      writer.println();
     }
   }
 
@@ -313,12 +317,15 @@ public class MabiWebUtils {
       while (line != null) {
         rowNum += 1;
         String[] cols = line.split("\t");
+        if (cols.length == 0 || cols[0] == null || cols[0].trim().equals("")) {
+          break;
+        }
         Game game = new Game(cols[0], cols[1]);
         game.setRound(cols[2]);
         game.setLastUpdated(cols[3]);
-
+        int maxCol = Math.min(4 + sf_numPlayers, cols.length);
         List<String[]> players = new ArrayList<>();
-        for (int x = 4; x < cols.length; x += 1) {
+        for (int x = 4; x < maxCol; x += 1) {
           Matcher playerMatcher = sf_tsvPlayerPattern.matcher(cols[x]);
           if (!playerMatcher.matches()) {
             throw new IllegalArgumentException("Unexpected player data on line " + rowNum + ": '" +

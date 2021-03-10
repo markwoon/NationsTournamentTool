@@ -154,6 +154,7 @@ public class Controller  {
       });
       task.setOnFailed(evt -> {
         if (task.getException() instanceof RuntimeException &&
+            task.getException().getMessage() != null &&
             task.getException().getMessage().startsWith("Cannot find any games")) {
           alert(AlertType.ERROR, task.getException().getMessage());
         } else {
@@ -190,6 +191,9 @@ public class Controller  {
 
       //noinspection UnstableApiUsage
       String baseFilename = com.google.common.io.Files.getNameWithoutExtension(listFileName);
+      if (baseFilename.matches("^(.+)_\\d\\d\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d$")) {
+        baseFilename = baseFilename.substring(0, baseFilename.length() - 17);
+      }
       String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm"));
       Path file = listFile.getParent().resolve(baseFilename + "_" + timestamp + ".tsv");
 

@@ -149,6 +149,11 @@ public class Game {
     scores.put(player, score);
   }
 
+  public boolean hasScores() {
+    return !scores.isEmpty();
+  }
+
+
   public float getPoints(String player) {
     return points.get(player);
   }
@@ -157,7 +162,7 @@ public class Game {
    * Calculates tournament points for players.
    */
   public void calculatePoints() {
-    if (isFinished()) {
+    if (isFinished() && hasScores()) {
       List<Object[]> scoreData = new ArrayList<>();
       int total = 0;
       int order = 0;
