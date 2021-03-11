@@ -22,7 +22,7 @@ jobs:
       - name: Set APP_VERSION env
         run: echo ::set-env name=APP_VERSION::$(echo ${env.RELEASE_VERSION:10})
 
-      - run: echo "${{APP_VERSION}}"
+      - run: echo "${{env.APP_VERSION}}"
 
       - name: Set up JDK
         uses: actions/setup-java@v1
@@ -38,5 +38,5 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
-          file: target/jpackage/TournamentTool-${{APP_VERSION}}.msi
+          file: target/jpackage/TournamentTool-${{env.APP_VERSION}}.msi
           overwrite: true
