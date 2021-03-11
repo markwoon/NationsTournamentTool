@@ -28,7 +28,7 @@ jobs:
         uses: bhowell2/github-substring-action@v1
         id: appVersion
         with:
-          value: ${github.ref}
+          value: ${{github.ref}}
           index_of_str: "refs/tags/v"
 
       - run: echo "appVersion=${{steps.appVersion.outputs.substring}}"
