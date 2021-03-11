@@ -14,8 +14,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set RELEASE_VERSION env
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/v*/}" >> $GITHUB_ENV
+      - name: Set appVersion
+        uses: bhowell2/github-substring-action@v1
+        id: appVersion
+        with:
+          value: ${{github.ref}}
+          index_of_str: "refs/tags/v"
+
+      - run: echo "App Version = ${{steps.appVersion.outputs.substring}}"
 
       - name: Set up JDK
         uses: actions/setup-java@v1
@@ -31,5 +37,5 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
-          file: target/jpackage/TournamentTool-${{env.RELEASE_VERSION}}.msi
+          file: target/jpackage/TournamentTool-${{steps.appVersion.outputs.substring}}.msi
           overwrite: true
