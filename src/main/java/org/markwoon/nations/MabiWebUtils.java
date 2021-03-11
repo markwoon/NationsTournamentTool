@@ -27,9 +27,13 @@ import org.markwoon.nations.model.PlayerPoints;
 
 
 /**
+ * Utilities for working with MabiWeb.
+ *
  * @author Mark Woon
  */
 public class MabiWebUtils {
+  public static final DateTimeFormatter DATE_TIME_FORMATTER =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
   private static final int sf_numPlayers = 3;
   private static final Splitter sf_commaSplitter = Splitter.on(",").trimResults()
       .omitEmptyStrings();
@@ -92,7 +96,7 @@ public class MabiWebUtils {
 
   private static final Pattern sf_timeAgoPattern = Pattern.compile("(\\d+)(?:\\.(\\d+))? (min|hours|days) ago");
 
-  private static String calculateTimestamp(String lastUpdate) throws IOException {
+  private static LocalDateTime calculateTimestamp(String lastUpdate) throws IOException {
     Matcher m = sf_timeAgoPattern.matcher(lastUpdate);
     if (m.matches()) {
       int main = Integer.parseInt(m.group(1));
@@ -117,11 +121,11 @@ public class MabiWebUtils {
         case "days" -> {
           dateTime = dateTime.minusDays(main);
           if (sub > 0) {
-            dateTime = dateTime.minusHours((long)(2.4 * sub));
+            dateTime = dateTime.minusMinutes((long)(2.4 * sub * 60));
           }
         }
       }
-      return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+      return dateTime;
 
     } else {
       throw new IOException("Unexpected time ago format: " + lastUpdate);
@@ -239,8 +243,8 @@ public class MabiWebUtils {
   public static void writeTsv(SortedMap<String, Game> games, Path file) throws IOException {
 
     try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(file))) {
-      DecimalFormat df = new DecimalFormat();
-      df.setMaximumFractionDigits(2);
+      DecimalFormat decimalFormat = new DecimalFormat();
+      decimalFormat.setMaximumFractionDigits(2);
       SortedMap<String, SortedMap<String, PlayerPoints>> totalPoints = new TreeMap<>();
       writer.print("Game ID\tGame Name\tRound\tLast Updated\t");
       for (int x = 0; x < sf_numPlayers; x += 1) {
@@ -255,7 +259,7 @@ public class MabiWebUtils {
         writer.print("\t");
         writer.print(game.getRound());
         writer.print("\t");
-        writer.print(game.getLastUpdated() == null ? "" : game.getLastUpdated());
+        writer.print(game.getLastUpdated() == null ? "" : game.getLastUpdated().format(DATE_TIME_FORMATTER));
         if (game.getPlayers() != null) {
           for (String player : game.getPlayers()) {
             writer.print("\t");
@@ -268,8 +272,8 @@ public class MabiWebUtils {
               writer.print(game.getScore(player) + "vp)");
             }
           }
-          if (game.isFinished() && game.hasScores()) {
-            game.calculatePoints();
+          if (game.hasScores()) {
+            game.calculatePoints(true, games.values());
             StringBuilder builder = new StringBuilder();
             for (String player : game.getPlayers()) {
               if (builder.length() > 0) {
@@ -278,13 +282,16 @@ public class MabiWebUtils {
               float points = game.getPoints(player);
               builder.append(player)
                   .append(" (")
-                  .append(df.format(points))
-                  .append(")");
+                  .append(decimalFormat.format(points));
+              if (player.equals(game.getSlowestPlayer())) {
+                builder.append(", SLOWEST");
+              }
+              builder.append(")");
 
               SortedMap<String, PlayerPoints> groupMap = totalPoints
                   .computeIfAbsent(game.getGroup(), g -> new TreeMap<>());
               PlayerPoints playerPoints = groupMap.computeIfAbsent(player, PlayerPoints::new);
-              playerPoints.addPoints(points);
+              playerPoints.addPoints(points, game.isFinished());
             }
 
             writer.print("\t");
@@ -331,7 +338,7 @@ public class MabiWebUtils {
         }
         Game game = new Game(cols[0], cols[1]);
         game.setRound(cols[2]);
-        game.setLastUpdated(cols[3]);
+        game.setLastUpdated(LocalDateTime.parse(cols[3], DATE_TIME_FORMATTER));
         int maxCol = Math.min(4 + sf_numPlayers, cols.length);
         List<String[]> players = new ArrayList<>();
         for (int x = 4; x < maxCol; x += 1) {
@@ -379,17 +386,14 @@ public class MabiWebUtils {
 
 
   /**
-   *
+   * Helper class to get the last updated timestamp for a game.
+   * Caches finished/running game lists.
    */
   private static class LastUpdatedHelper {
-    private Document m_finishedGames;
-    private Document m_runningGames;
+    private final Document m_finishedGames;
+    private final Document m_runningGames;
 
     LastUpdatedHelper() throws IOException {
-      initialize();
-    }
-
-    private void initialize() throws IOException {
       m_finishedGames = Jsoup.connect(sf_finishedGamesUrl)
           .get();
       m_runningGames = Jsoup.connect(sf_runningGamesUrl)
@@ -397,25 +401,18 @@ public class MabiWebUtils {
     }
 
     void updateLastUpdated(Game game) throws IOException {
-      if (!doUpdate(game.isFinished() ? m_finishedGames : m_runningGames, game)) {
-        // if can't find the first time, re-initialize and look again in case game ended
-        // since the data was cached
-        initialize();
-        doUpdate(game.isFinished() ? m_finishedGames : m_runningGames, game);
-      }
-    }
-
-    private boolean doUpdate(Document doc, Game game) throws IOException {
+      Document doc = game.isFinished() ? m_finishedGames : m_runningGames;
       for (Element tr : doc.select("#gamemanager-gamelists > table > tbody > tr")) {
         Elements tds = tr.select("td");
         String name = tds.get(2).text();
         if (name.startsWith(game.getName())) {
           String lastUpdate = tds.get(5).text();
           game.setLastUpdated(calculateTimestamp(lastUpdate));
-          return true;
+          return;
         }
       }
-      return false;
+      throw new IllegalStateException("Cannot find " + game.getName() + " in list of " +
+          (game.isFinished() ? "finished" : "running") + " games");
     }
   }
 }

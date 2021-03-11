@@ -28,9 +28,11 @@ public class PlayerPoints implements Comparable<PlayerPoints> {
     return m_points;
   }
 
-  public void addPoints(float points) {
+  public void addPoints(float points, boolean isFinished) {
     m_points += points;
-    m_matches += 1;
+    if (isFinished) {
+      m_matches += 1;
+    }
   }
 
   public int getMatches() {
@@ -71,6 +73,6 @@ public class PlayerPoints implements Comparable<PlayerPoints> {
   public String toString() {
     DecimalFormat df = new DecimalFormat();
     df.setMaximumFractionDigits(2);
-    return m_name + ": " + df.format(m_points) + " (" + m_matches + "/4)";
+    return m_name + ": " + df.format(m_points) + " (" + m_matches + "/4 completed matches)";
   }
 }

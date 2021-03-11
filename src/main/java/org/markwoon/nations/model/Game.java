@@ -1,16 +1,25 @@
 package org.markwoon.nations.model;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 
 /**
+ * Represents a Nations game.
+ *
  * @author Mark Woon
  */
 public class Game {
@@ -22,8 +31,9 @@ public class Game {
   private String group;
   private List<String> players;
   private String round;
-  private String lastUpdated;
+  private LocalDateTime lastUpdated;
   private String activePlayer;
+  private String slowestPlayer;
   private final Map<String, String> countries = new HashMap<>();
   private final Map<String, Integer> scores = new HashMap<>();
   private final Map<String, Integer> unusedWorkers = new HashMap<>();
@@ -81,11 +91,11 @@ public class Game {
   }
 
 
-  public String getLastUpdated() {
+  public LocalDateTime getLastUpdated() {
     return lastUpdated;
   }
 
-  public void setLastUpdated(String lastUpdated) {
+  public void setLastUpdated(LocalDateTime lastUpdated) {
     this.lastUpdated = lastUpdated;
   }
 
@@ -111,6 +121,14 @@ public class Game {
 
   public void setActivePlayer(@Nullable String activePlayer) {
     this.activePlayer = activePlayer;
+  }
+
+
+  /**
+   * Only set after calculating score for an unfinished game.
+   */
+  public @Nullable String getSlowestPlayer() {
+    return slowestPlayer;
   }
 
 
@@ -161,15 +179,26 @@ public class Game {
   /**
    * Calculates tournament points for players.
    */
-  public void calculatePoints() {
-    if (isFinished() && hasScores()) {
+  public void calculatePoints(boolean withSlowestPlayer, Collection<Game> games) {
+    if (!isFinished() && withSlowestPlayer) {
+      calculateSlowestPlayer(games);
+    }
+    if (hasScores()) {
       List<Object[]> scoreData = new ArrayList<>();
       int total = 0;
       int order = 0;
       for (String p : players) {
-        total += scores.get(p);
+        int score = scores.get(p);
+        int slowPenalty = 0;
+        if (!isFinished()) {
+          score += getUnusedWorkers(p);
+          if (withSlowestPlayer && p.equals(slowestPlayer)) {
+            slowPenalty = -10;
+          }
+        }
+        total += score;
         order += 1;
-        scoreData.add(new Object[]{ p, scores.get(p), order });
+        scoreData.add(new Object[]{ p, score, order, slowPenalty });
       }
       scoreData.sort((o1, o2) -> {
         int score1 = (Integer)o1[1];
@@ -184,17 +213,54 @@ public class Game {
       int place = 0;
       for (Object[] data : scoreData) {
         place += 1;
-        int bonus = 0;
-        if (place == 0) {
-          bonus = 10;
-        } else if (place == 1) {
-          bonus = 5;
+        int bonus = (int)data[3];
+        if (place == 1) {
+          bonus += 10;
+        } else if (place == 2) {
+          bonus += 5;
         }
         float score = ((Integer)data[1] / (float)total * 100) + bonus;
         points.put((String)data[0], score);
       }
     }
   }
+
+  private void calculateSlowestPlayer(Collection<Game> games) {
+    // find games with current players
+    Multimap<String, Game> playerGames = HashMultimap.create();
+    for (Game game : games) {
+      if (game == this) {
+        continue;
+      }
+      for (String p : players) {
+        if (game.getPlayers().contains(p)) {
+          if (!game.isFinished()) {
+            playerGames.put(p, game);
+          }
+          break;
+        }
+      }
+    }
+    if (playerGames.keySet().size() == 1) {
+      slowestPlayer = playerGames.keySet().iterator().next();
+    } else if (playerGames.keySet().size() > 1) {
+      SortedSet<Object[]> data = new TreeSet<>((o1, o2) -> ComparisonChain.start()
+          .compare((int)o2[1], (int)o1[1])
+          .compare((long)o2[2], (long)o1[2])
+          .compare((int)o2[3], (int)o1[3])
+          .result());
+      LocalDateTime curTime = LocalDateTime.now();
+      for (String p : playerGames.keySet()) {
+        long elapsedTime = 0;
+        for (Game g : playerGames.get(p)) {
+          elapsedTime += Math.abs(ChronoUnit.MILLIS.between(g.lastUpdated, curTime));
+        }
+        data.add(new Object[] { p, playerGames.get(p).size(), elapsedTime, players.indexOf(p)});
+      }
+      slowestPlayer = (String)data.first()[0];
+    }
+  }
+
 
   @Override
   public String toString() {
