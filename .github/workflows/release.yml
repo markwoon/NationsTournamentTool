@@ -38,9 +38,9 @@ jobs:
           echo "$GITHUB_CONTEXT"
           echo "${{env.GITHUB_CONTEXT}}"
 
-      - run: echo "::debug::${{GITHUB_CONTEXT}}"
-      - run: echo "::debug::${{GITHUB_REF}}"
-      - run: echo "::debug::${{GITHUB_REF#refs/*/}}"
+      - run: echo "::debug::${GITHUB_CONTEXT}"
+      - run: echo "::debug::${GITHUB_REF}"
+#      - run: echo "::debug::${{GITHUB_REF#refs/*/}}"
       - run: echo "::debug::${{env.RELEASE_VERSION}}"
       - run: echo "::debug::${{env.APP_VERSION}}"
 
