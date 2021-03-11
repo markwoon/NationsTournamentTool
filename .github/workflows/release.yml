@@ -32,7 +32,7 @@ jobs:
       - run: echo "tag={{steps.vars.outputs.gitTag}}"
 
       - name: Set appVersion env (with set-output)
-        run: echo ::set-output name=appVersion::${{step.vars.outputs.tag:1}}
+        run: echo ::set-output name=appVersion::${{steps.vars.outputs.tag:1}}
 
       - run: echo "appVersion={{steps.vars.outputs.appVersion}}"
 
