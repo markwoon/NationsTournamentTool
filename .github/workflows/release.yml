@@ -20,9 +20,22 @@ jobs:
       - run: echo "RELEASE_VERSION = ${{env.RELEASE_VERSION}}"
 
       - name: Set APP_VERSION env
-        run: echo "APP_VERSION::$(echo ${env.RELEASE_VERSION:1})" >> $GITHUB_ENV
+        run: echo "APP_VERSION=$(echo ${env.RELEASE_VERSION:1})" >> $GITHUB_ENV
 
       - run: echo "APP_VERSION = ${{env.APP_VERSION}}"
+
+
+
+      - name: Set gitTag env (with set-output)
+        run: echo ::set-output name=gitTag::${GITHUB_REF#refs/*/}
+
+      - run: echo "tag={{steps.vars.outputs.gitTag}}"
+
+      - name: Set appVersion env (with set-output)
+        run: echo ::set-output name=appVersion::${{step.vars.outputs.tag:1}}
+
+      - run: echo "appVersion={{steps.vars.outputs.appVersion}}"
+
 
       - name: Set up JDK
         uses: actions/setup-java@v1
