@@ -26,15 +26,20 @@ jobs:
 
 
 
-      - name: Set gitTag env (with set-output)
+      - name: Set gitTag (with set-output)
+        id: gitTag
         run: echo ::set-output name=gitTag::${GITHUB_REF#refs/*/}
 
-      - run: echo "tag={{steps.vars.outputs.gitTag}}"
+      - run: echo "tag={{steps.gitTag.outputs.gitTag}}"
 
       - name: Set appVersion env (with set-output)
-        run: echo ::set-output name=appVersion::${{steps.vars.outputs.tag:1}}
+        uses: bhowell2/github-substring-action
+        id: appVersion
+        with:
+          value: ${GITHUB_REF#refs/*/}
+          index_of_str: "v"
 
-      - run: echo "appVersion={{steps.vars.outputs.appVersion}}"
+      - run: echo "appVersion={{steps.appVersion.outputs.substring}}"
 
 
       - name: Set up JDK
