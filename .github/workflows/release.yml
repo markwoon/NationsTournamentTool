@@ -33,7 +33,7 @@ jobs:
       - run: echo "tag={{steps.gitTag.outputs.gitTag}}"
 
       - name: Set appVersion env (with set-output)
-        uses: bhowell2/github-substring-action@1.0.0
+        uses: bhowell2/github-substring-action@v1
         id: appVersion
         with:
           value: ${GITHUB_REF#refs/*/}
