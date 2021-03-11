@@ -1,3 +1,17 @@
+## [1.1.0](https://github.com/markwoon/NationsTournamentTool/compare/v1.0.2...v1.1.0) (2021-03-11)
+
+
+### Features
+
+* calculate tournament points ([2862717](https://github.com/markwoon/NationsTournamentTool/commit/28627171e189761b70dc4be2571c8dd0160b7da2))
+* support re-reading game info file ([7613125](https://github.com/markwoon/NationsTournamentTool/commit/7613125dd2a439a59a16ab15f5611a288a47ccbd))
+
+
+### Bug Fixes
+
+* fix scoring, add support for scoring unfinished matches ([8b2a1c6](https://github.com/markwoon/NationsTournamentTool/commit/8b2a1c60e0003643d04720e917914393cda89de7))
+* update last updated timestamp ([3ab406c](https://github.com/markwoon/NationsTournamentTool/commit/3ab406cd71ff76706943471715df955bfa2df982))
+
 ### [1.0.2](https://github.com/markwoon/NationsTournamentTool/compare/v1.0.1...v1.0.2) (2021-03-01)
 
 
