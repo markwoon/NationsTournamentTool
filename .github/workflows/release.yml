@@ -35,7 +35,8 @@ jobs:
         run: |
           echo "The event name is ${{ github.event_name }}"
           echo "The event name is ${{ github.ref }}"
-          echo "${{GITHUB_CONTEXT}}"
+          echo "$GITHUB_CONTEXT"
+          echo "${{env.GITHUB_CONTEXT}}"
 
       - run: echo "::debug::${{GITHUB_CONTEXT}}"
       - run: echo "::debug::${{GITHUB_REF}}"
