@@ -1,3 +1,10 @@
+### [1.1.6](https://github.com/markwoon/NationsTournamentTool/compare/v1.1.5...v1.1.6) (2021-03-11)
+
+
+### Bug Fixes
+
+* fix release GH action, take 7 [skip ci] ([95b890d](https://github.com/markwoon/NationsTournamentTool/commit/95b890d017dc0fc202dbc67e45f2268529744939))
+
 ### [1.1.5](https://github.com/markwoon/NationsTournamentTool/compare/v1.1.4...v1.1.5) (2021-03-11)
 
 
