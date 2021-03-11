@@ -37,5 +37,5 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
-          file: target/jpackage/TournamentTool-${{steps.appVersion.outputs.substring}}.msi
+          file: build/jpackage/TournamentTool-${{steps.appVersion.outputs.substring}}.msi
           overwrite: true
