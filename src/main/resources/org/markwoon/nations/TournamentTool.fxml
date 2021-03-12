@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.Insets?>
+<?xml version="1.0" encoding="UTF-8"?><?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?><AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.markwoon.nations.Controller">
   <StackPane>
@@ -11,8 +9,9 @@
             <center>
               <GridPane hgap="8" vgap="4">
                 <columnConstraints>
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="70.0" prefWidth="80.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="130.0" prefWidth="400.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="100.0" prefWidth="105.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="130.0" prefWidth="360.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="110.0" prefWidth="115.0" />
                 </columnConstraints>
                 <padding>
                   <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
@@ -20,15 +19,16 @@
                 <Label text="Tournament Prefix:"
                     GridPane.rowIndex="0" GridPane.columnIndex="0" />
                 <TextField fx:id="tournamentInput"
-                    GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                    GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.columnSpan="2" />
 
                 <Label text="Save File To:"
                     GridPane.rowIndex="1" GridPane.columnIndex="0" />
                 <TextField fx:id="dirInput"
                     GridPane.rowIndex="1" GridPane.columnIndex="1" />
-
                 <Button mnemonicParsing="false" text="Choose Directory"
-                    GridPane.rowIndex="2" GridPane.columnIndex="1" onAction="#chooseDirectory" />
+                    GridPane.rowIndex="1" GridPane.columnIndex="2"
+                    onAction="#chooseDirectory" />
+
               </GridPane>
             </center>
             <bottom>
@@ -49,18 +49,27 @@
             <center>
               <GridPane hgap="8" vgap="4">
                 <columnConstraints>
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="70.0" prefWidth="70.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="130.0" prefWidth="500.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="80.0" prefWidth="85.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="130.0" prefWidth="390.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="80.0" prefWidth="85.0" />
                 </columnConstraints>
                 <padding>
                   <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
                 </padding>
 
-                <Label text="Game list:" />
-                <TextField fx:id="fileInput" GridPane.columnIndex="1" />
-
+                <Label text="Game list:"
+                    GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                <TextField fx:id="fileInput"
+                    GridPane.rowIndex="0" GridPane.columnIndex="1" />
                 <Button mnemonicParsing="false" text="Choose File"
-                    GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#chooseFile" />
+                    GridPane.rowIndex="0" GridPane.columnIndex="2"
+                    onAction="#chooseFile" />
+
+                <Label text="Scoring mode:"
+                    GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                <ChoiceBox fx:id="scoreMode" value="Normal"
+                    GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
               </GridPane>
             </center>
             <bottom>

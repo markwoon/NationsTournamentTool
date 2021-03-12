@@ -179,8 +179,8 @@ public class Game {
   /**
    * Calculates tournament points for players.
    */
-  public void calculatePoints(boolean withSlowestPlayer, Collection<Game> games) {
-    if (!isFinished() && withSlowestPlayer) {
+  public void calculatePoints(Collection<Game> games, boolean calculateFinalUnfinishedGameScore) {
+    if (!isFinished() && calculateFinalUnfinishedGameScore) {
       calculateSlowestPlayer(games);
     }
     if (hasScores()) {
@@ -190,9 +190,9 @@ public class Game {
       for (String p : players) {
         int score = scores.get(p);
         int slowPenalty = 0;
-        if (!isFinished()) {
+        if (!isFinished() && calculateFinalUnfinishedGameScore) {
           score += getUnusedWorkers(p);
-          if (withSlowestPlayer && p.equals(slowestPlayer)) {
+          if (p.equals(slowestPlayer)) {
             slowPenalty = -10;
           }
         }

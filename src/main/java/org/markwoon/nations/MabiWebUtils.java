@@ -240,7 +240,8 @@ public class MabiWebUtils {
   }
 
 
-  public static void writeTsv(SortedMap<String, Game> games, Path file) throws IOException {
+  public static void writeTsv(SortedMap<String, Game> games, Path file,
+      boolean calculateFinalUnfinishedGameScore) throws IOException {
 
     try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(file))) {
       DecimalFormat decimalFormat = new DecimalFormat();
@@ -273,7 +274,7 @@ public class MabiWebUtils {
             }
           }
           if (game.hasScores()) {
-            game.calculatePoints(true, games.values());
+            game.calculatePoints(games.values(), calculateFinalUnfinishedGameScore);
             StringBuilder builder = new StringBuilder();
             for (String player : game.getPlayers()) {
               if (builder.length() > 0) {

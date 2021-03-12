@@ -17,6 +17,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -33,12 +34,17 @@ public class Controller  {
   private static final String PREFS_TOURNAMENT_PREFIX = "tournamentPrefix";
   private static final String PREFS_WORKING_DIR = "workingDir";
   private static final String PREFS_GAME_LIST_FILE = "file.gameList";
+  private static final String PREFS_SCORE_MODE = "scoreMode";
+  private static final String NORMAL_SCORE_MODE_VALUE = "Normal";
+  private static final String FINAL_SCORE_MODE_VALUE = "Final";
   @FXML
   private TextField tournamentInput;
   @FXML
   private TextField dirInput;
   @FXML
   private TextField fileInput;
+  @FXML
+  private ChoiceBox<String> scoreMode;
   @FXML
   private Button dlGameInfoBtn;
   @FXML
@@ -53,6 +59,10 @@ public class Controller  {
 
     String dir = prefs.get(PREFS_WORKING_DIR, "");
     dirInput.setText(dir);
+
+    String mode = prefs.get(PREFS_SCORE_MODE, NORMAL_SCORE_MODE_VALUE);
+    scoreMode.getItems().addAll(NORMAL_SCORE_MODE_VALUE, FINAL_SCORE_MODE_VALUE);
+    scoreMode.setValue(mode);
 
     String filename = prefs.get(PREFS_GAME_LIST_FILE, "");
     fileInput.setText(filename);
@@ -137,7 +147,7 @@ public class Controller  {
             if (games.size() == 0) {
               throw new RuntimeException("Cannot find any games with prefix '" + prefix + "'");
             }
-            MabiWebUtils.writeTsv(games, file);
+            MabiWebUtils.writeTsv(games, file, false);
           } finally {
             loading.setVisible(false);
             dlGameInfoBtn.setDisable(false);
@@ -182,10 +192,14 @@ public class Controller  {
       return;
     }
 
+    boolean calculateFinalUnfinishedGameScore = FINAL_SCORE_MODE_VALUE.equals(scoreMode.getValue());
+
     Preferences prefs = Preferences.userRoot().node(this.getClass().getName());
     prefs.put(PREFS_GAME_LIST_FILE, listFileName);
+    prefs.put(PREFS_SCORE_MODE, scoreMode.getValue());
 
     try {
+      scoreMode.setDisable(true);
       dlGameInfoBtn.setDisable(true);
       loading.setVisible(true);
 
@@ -203,20 +217,18 @@ public class Controller  {
           try {
             SortedMap<String, Game> games = MabiWebUtils.readTsv(listFile);
             MabiWebUtils.getGameDetails(games);
-            MabiWebUtils.writeTsv(games, file);
+            MabiWebUtils.writeTsv(games, file, calculateFinalUnfinishedGameScore);
           } finally {
             loading.setVisible(false);
+            scoreMode.setDisable(false);
             dlGameInfoBtn.setDisable(false);
           }
           return null;
         }
       };
-      task.setOnSucceeded(evt -> {
-        alert(AlertType.INFORMATION, "Done.\n\nSaved to:\n" + file.toString());
-      });
-      task.setOnFailed(evt -> {
-        alertException(task.getException());
-      });
+      task.setOnSucceeded(evt ->
+          alert(AlertType.INFORMATION, "Done.\n\nSaved to:\n" + file.toString()));
+      task.setOnFailed(evt -> alertException(task.getException()));
       new Thread(task).start();
 
     } catch (Exception ex) {
