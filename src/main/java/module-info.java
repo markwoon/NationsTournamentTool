@@ -2,6 +2,7 @@
  * @author Mark Woon
  */
 module org.markwoon.nations {
+  requires java.net.http;
   requires java.prefs;
   requires javafx.controls;
   requires javafx.fxml;

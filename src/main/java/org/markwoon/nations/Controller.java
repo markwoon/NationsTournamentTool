@@ -143,11 +143,11 @@ public class Controller  {
         @Override
         protected Void call() throws Exception {
           try {
-            SortedMap<String, Game> games = MabiWebUtils.getGames(prefix);
+            SortedMap<String, Game> games = MabiWebHelper.getGames(prefix);
             if (games.size() == 0) {
               throw new RuntimeException("Cannot find any games with prefix '" + prefix + "'");
             }
-            MabiWebUtils.writeTsv(games, file, false);
+            NationsUtils.writeTsv(games, file, false);
           } finally {
             loading.setVisible(false);
             dlGameInfoBtn.setDisable(false);
@@ -215,9 +215,9 @@ public class Controller  {
         @Override
         protected Void call() throws Exception {
           try {
-            SortedMap<String, Game> games = MabiWebUtils.readTsv(listFile);
-            MabiWebUtils.getGameDetails(games);
-            MabiWebUtils.writeTsv(games, file, calculateFinalUnfinishedGameScore);
+            SortedMap<String, Game> games = NationsUtils.readTsv(listFile);
+            MabiWebHelper.getGameDetails(games);
+            NationsUtils.writeTsv(games, file, calculateFinalUnfinishedGameScore);
           } finally {
             loading.setVisible(false);
             scoreMode.setDisable(false);
