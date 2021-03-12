@@ -1,3 +1,15 @@
+## [1.2.0](https://github.com/markwoon/NationsTournamentTool/compare/v1.1.2...v1.2.0) (2021-03-12)
+
+
+### Features
+
+* support toggling normal/final score mode ([8970c8e](https://github.com/markwoon/NationsTournamentTool/commit/8970c8e33e33ce8093008478e997f4aeafcb87a1))
+
+
+### Bug Fixes
+
+* add score mode help text ([8d32c48](https://github.com/markwoon/NationsTournamentTool/commit/8d32c480d397039bb9603cc961cb5981befa209f))
+
 ### [1.1.2](https://github.com/markwoon/NationsTournamentTool/compare/v1.1.1...v1.1.2) (2021-03-11)
 
 
