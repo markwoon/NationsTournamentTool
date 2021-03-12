@@ -69,6 +69,8 @@
                     GridPane.rowIndex="2" GridPane.columnIndex="0" />
                 <ChoiceBox fx:id="scoreMode" value="Normal"
                     GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                <Label text="Choose 'Normal' to score unfinished games like finished games.&#13;Choose 'Final' to use the tournament's unfinished game scoring rules."
+                    GridPane.rowIndex="3" GridPane.columnIndex="1" />
 
               </GridPane>
             </center>
