@@ -26,13 +26,21 @@
           "replacements": [
             {
               "files": [
-                "gradle.properties"
+                "gradle.properties",
+                "src/main/resources/org/markwoon/nations/TournamentTool.properties"
+
               ],
               "from": "version=.*",
               "to": "version=${nextRelease.version}",
               "results": [
                 {
                   "file": "gradle.properties",
+                  "hasChanged": true,
+                  "numMatches": 1,
+                  "numReplacements": 1
+                },
+                {
+                  "file": "src/main/resources/org/markwoon/nations/TournamentTool.properties",
                   "hasChanged": true,
                   "numMatches": 1,
                   "numReplacements": 1
