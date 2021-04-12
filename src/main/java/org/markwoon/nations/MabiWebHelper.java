@@ -1,6 +1,7 @@
 package org.markwoon.nations;
 
 import java.io.IOException;
+import java.net.CookieManager;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -9,13 +10,18 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.net.HttpHeaders;
+import org.apache.commons.text.WordUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -30,6 +36,7 @@ import org.markwoon.nations.model.Game;
  * @author Mark Woon
  */
 public class MabiWebHelper {
+  public enum Level {EMPEROR, KING, PRINCE, CHIEFTAIN}
   private static final Splitter sf_commaSplitter = Splitter.on(",").trimResults()
       .omitEmptyStrings();
   // maximum allowed days is 30
@@ -149,8 +156,12 @@ public class MabiWebHelper {
   private static final Pattern sf_countryPattern =
       Pattern.compile("modules/GM_Nations/images/DPlayerBoard_(\\w+)\\.jpg");
   private static final Pattern sf_topPattern = Pattern.compile("top:(\\d+)");
+  private static final Pattern sf_startedPattern = Pattern.compile("Nations Game ID=\\d+, started ([\\d.]+, \\d+:\\d+:\\d+)");
+  private static final Pattern sf_finishedPattern = Pattern.compile("Game finished ([\\d.]+, \\d+:\\d+:\\d+)");
   private static final Splitter sf_spaceSplitter = Splitter.on(" ").trimResults()
       .omitEmptyStrings();
+  private static final DateTimeFormatter sf_gameDetailDateTimeFormatter =
+      DateTimeFormatter.ofPattern("yyyy.MM.dd, HH:mm:ss");
 
   /**
    * Gets the details of a specific game.
@@ -159,14 +170,33 @@ public class MabiWebHelper {
     Document doc = Jsoup.connect("http://www.mabiweb.com/modules.php?name=GM_Nations&op=view_game_reset&g_id=" + game.getId())
         .get();
 
+    if (doc.text().contains("Error: can't load position for game with ID")) {
+      // game has not started
+      return;
+    }
+
     Element header = doc.getElementById("nations-gameheader");
     String headerPlayerInfo = header.text().substring(header.text().indexOf("Players:") + 8);
+    Element lastActions = doc.getElementById("last_actions");
 
     boolean isFinished = header.html().contains("Game finished");
     // finished?
     if (isFinished) {
       // round
       game.setRound(Game.ROUND_FINISHED);
+
+      // started
+      if (game.getGameStarted() == null) {
+        Matcher startedMatcher = sf_startedPattern.matcher(lastActions.text());
+        if (startedMatcher.find()) {
+          game.setGameStarted(LocalDateTime.parse(startedMatcher.group(1), sf_gameDetailDateTimeFormatter));
+        }
+      }
+      // finished
+      Matcher finishedMatcher = sf_finishedPattern.matcher(lastActions.text());
+      if (finishedMatcher.find()) {
+        game.setGameFinished(LocalDateTime.parse(finishedMatcher.group(1), sf_gameDetailDateTimeFormatter));
+      }
 
       // players and score
       Matcher m = sf_playerFinalScorePattern.matcher(headerPlayerInfo);
@@ -187,6 +217,12 @@ public class MabiWebHelper {
       Matcher roundMatcher = sf_roundPattern.matcher(header.text());
       if (roundMatcher.find()) {
         game.setRoundString(roundMatcher.group(1));
+      }
+
+      // started
+      Matcher startedMatcher = sf_startedPattern.matcher(lastActions.text());
+      if (startedMatcher.find()) {
+        game.setGameStarted(LocalDateTime.parse(startedMatcher.group(1), sf_gameDetailDateTimeFormatter));
       }
 
       // players
@@ -267,33 +303,116 @@ public class MabiWebHelper {
   }
 
 
-  private HttpClient m_httpClient;
+  private final HttpClient m_httpClient;
 
   public MabiWebHelper() {
-    m_httpClient = HttpClient.newHttpClient();
+    m_httpClient = HttpClient.newBuilder()
+        .cookieHandler(new CookieManager())
+        .build();
   }
 
-  public void login(String userId, String pwd) throws IOException, InterruptedException {
-    //username=absd&user_password=fdsa&op=login&MB_location=%2F
-
+  public boolean login(String userId, String pwd) throws IOException, InterruptedException {
     HttpRequest request = HttpRequest.newBuilder()
         .uri(URI.create("http://www.mabiweb.com/modules.php?name=Your_Account"))
-        .timeout(Duration.ofMinutes(2))
-        .header("Content-Type", "application/json")
-        .POST(HttpRequest.BodyPublishers.ofString("op=login&username=" +
-            URLEncoder.encode(userId, StandardCharsets.UTF_8) + "&user_password=" +
-            URLEncoder.encode(pwd, StandardCharsets.UTF_8)))
+        .timeout(Duration.ofSeconds(30))
+        .header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
+        .POST(HttpRequest.BodyPublishers.ofString("op=login" +
+            "&username=" + URLEncoder.encode(userId, StandardCharsets.UTF_8) +
+            "&user_password=" + URLEncoder.encode(pwd, StandardCharsets.UTF_8)))
         .build();
     HttpResponse<String> response = m_httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-    System.out.println(response);
+    if (response.statusCode() != 302) {
+      return false;
+    }
+    return isLoggedIn();
   }
 
-  public static void main(String[] args) {
-    MabiWebHelper helper = new MabiWebHelper();
-    try {
-      helper.login("test", "boopboop");
-    } catch (Exception ex) {
-      ex.printStackTrace();
+  public boolean isLoggedIn() throws IOException, InterruptedException {
+    HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create("http://www.mabiweb.com/modules.php?name=Your_Account&stop=1"))
+        .timeout(Duration.ofSeconds(30))
+        .build();
+    HttpResponse<String> response = m_httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    return !response.body().contains("<b>Login Incorrect! Please Try Again...</b>");
+  }
+
+
+  public boolean createGame(String name, String password, int numPlayers, Level level)
+      throws IOException, InterruptedException {
+
+    int levelNum;
+    switch (level) {
+      case CHIEFTAIN -> levelNum = 4;
+      case PRINCE -> levelNum = 3;
+      case KING -> levelNum = 2;
+      case EMPEROR -> levelNum = 1;
+      default -> throw new IllegalArgumentException("Unsupported level: " + level);
+    }
+
+    HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create("http://www.mabiweb.com/modules.php?name=GM_Nations"))
+        .timeout(Duration.ofSeconds(30))
+        .header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
+        .POST(HttpRequest.BodyPublishers.ofString("op=new_game" +
+            "&num_allowed[]=" + numPlayers +
+            "&title=" + URLEncoder.encode(name, StandardCharsets.UTF_8) +
+            "&password=" + URLEncoder.encode(password, StandardCharsets.UTF_8) +
+            "&level=" + levelNum +
+            // players pick boards
+            "&boards=2" +
+            // advanced cards
+            "&cards[0]=1" +
+            // expert cards
+            "&cards[1]=1" +
+            // dynasties expansion
+            "&dynasties=1"
+        ))
+        .build();
+    HttpResponse<String> response = m_httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    String body = response.body();
+    System.out.println(body);
+    return body.contains("Game created");
+  }
+
+
+  public List<NewGame> buildTournamentGameList(String prefix, Level groupLevel) {
+    Preconditions.checkNotNull(prefix);
+    prefix = prefix.trim();
+    Preconditions.checkArgument(prefix.length() > 0);
+
+    List<NewGame> games = new ArrayList<>();
+    int groupNum = groupLevel.ordinal() + 1;
+    String groupName = prefix + " - Group " + WordUtils.capitalizeFully(groupLevel.name());
+    for (int gameNum = 1; gameNum <= 12; gameNum += 1) {
+      Level level = Level.CHIEFTAIN;
+      if (gameNum <= 3) {
+        level = Level.EMPEROR;
+      } else if (gameNum <= 6) {
+        level = Level.KING;
+      } else if (gameNum <= 9) {
+        level = Level.PRINCE;
+      }
+      games.add(new NewGame(groupName + " - Game " + groupNum + String.format("%02d", gameNum), level));
+    }
+    return games;
+  }
+
+  private static final class NewGame {
+    String name;
+    Level level;
+    List<String> players;
+
+    NewGame(String name, Level level, String... players) {
+      this.name = name;
+      this.level = level;
+      if (players != null) {
+        this.players = Arrays.asList(players);
+      }
+    }
+
+    @Override
+    public String toString() {
+      return name + " (" + level + ")";
     }
   }
 }

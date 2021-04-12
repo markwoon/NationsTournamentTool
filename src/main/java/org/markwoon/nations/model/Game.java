@@ -24,13 +24,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class Game {
   public static final String ROUND_FINISHED = "finished";
-  private static final Pattern sf_gameGroupPattern = Pattern.compile("- Group ([A-Z]) -");
+  private static final Pattern sf_gameGroupPattern = Pattern.compile("- Group ([A-Za-z]+) -");
   private static final Pattern sf_roundPattern = Pattern.compile("\\w+ \\((.*)\\) - ([AB])");
   private final String id;
   private final String name;
-  private String group;
+  private final String group;
   private List<String> players;
   private String round;
+  private LocalDateTime gameStarted;
+  private LocalDateTime gameFinished;
   private LocalDateTime lastUpdated;
   private String activePlayer;
   private String slowestPlayer;
@@ -88,6 +90,23 @@ public class Game {
 
   public boolean isFinished() {
     return ROUND_FINISHED.equals(round);
+  }
+
+
+  public LocalDateTime getGameStarted() {
+    return gameStarted;
+  }
+
+  public void setGameStarted(LocalDateTime gameStarted) {
+    this.gameStarted = gameStarted;
+  }
+
+  public LocalDateTime getGameFinished() {
+    return gameFinished;
+  }
+
+  public void setGameFinished(LocalDateTime gameFinished) {
+    this.gameFinished = gameFinished;
   }
 
 
@@ -228,6 +247,7 @@ public class Game {
   private void calculateSlowestPlayer(Collection<Game> games) {
     // find games with current players
     Multimap<String, Game> playerGames = HashMultimap.create();
+    Multimap<String, Game> ongoingPlayerGames = HashMultimap.create();
     for (Game game : games) {
       if (game == this) {
         continue;
@@ -235,15 +255,15 @@ public class Game {
       for (String p : players) {
         if (game.getPlayers().contains(p)) {
           if (!game.isFinished()) {
-            playerGames.put(p, game);
+            ongoingPlayerGames.put(p, game);
           }
-          break;
+          playerGames.put(p, game);
         }
       }
     }
-    if (playerGames.keySet().size() == 1) {
+    if (ongoingPlayerGames.keySet().size() == 1) {
       slowestPlayer = playerGames.keySet().iterator().next();
-    } else if (playerGames.keySet().size() > 1) {
+    } else {
       SortedSet<Object[]> data = new TreeSet<>((o1, o2) -> ComparisonChain.start()
           .compare((int)o2[1], (int)o1[1])
           .compare((long)o2[2], (long)o1[2])
@@ -253,9 +273,13 @@ public class Game {
       for (String p : playerGames.keySet()) {
         long elapsedTime = 0;
         for (Game g : playerGames.get(p)) {
-          elapsedTime += Math.abs(ChronoUnit.MILLIS.between(g.lastUpdated, curTime));
+          if (g.isFinished()) {
+            elapsedTime += Math.abs(ChronoUnit.MILLIS.between(g.gameStarted, g.gameFinished));
+          } else {
+            elapsedTime += Math.abs(ChronoUnit.MILLIS.between(g.gameStarted, curTime));
+          }
+          data.add(new Object[]{ p, ongoingPlayerGames.get(p).size(), elapsedTime, players.indexOf(p) });
         }
-        data.add(new Object[] { p, playerGames.get(p).size(), elapsedTime, players.indexOf(p)});
       }
       slowestPlayer = (String)data.first()[0];
     }

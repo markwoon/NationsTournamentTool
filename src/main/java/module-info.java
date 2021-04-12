@@ -7,6 +7,8 @@ module org.markwoon.nations {
   requires javafx.controls;
   requires javafx.fxml;
 
+  requires org.apache.commons.lang3;
+  requires org.apache.commons.text;
   requires org.checkerframework.checker.qual;
   requires com.google.common;
   requires org.jsoup;

@@ -16,6 +16,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.markwoon.nations.model.Game;
 import org.markwoon.nations.model.PlayerPoints;
 
@@ -37,7 +38,7 @@ public class NationsUtils {
       DecimalFormat decimalFormat = new DecimalFormat();
       decimalFormat.setMaximumFractionDigits(2);
       SortedMap<String, SortedMap<String, PlayerPoints>> totalPoints = new TreeMap<>();
-      writer.print("Game ID\tGame Name\tRound\tLast Updated\t");
+      writer.print("Game ID\tGame Name\tRound\tStarted\tLast Updated\tFinished\t");
       for (int x = 0; x < sf_numPlayers; x += 1) {
         writer.print("Player " + (x + 1) + "\t");
       }
@@ -50,7 +51,11 @@ public class NationsUtils {
         writer.print("\t");
         writer.print(game.getRound());
         writer.print("\t");
+        writer.print(game.getGameStarted() == null ? "" : game.getGameStarted().format(DATE_TIME_FORMATTER));
+        writer.print("\t");
         writer.print(game.getLastUpdated() == null ? "" : game.getLastUpdated().format(DATE_TIME_FORMATTER));
+        writer.print("\t");
+        writer.print(game.getGameFinished() == null ? "" : game.getGameFinished().format(DATE_TIME_FORMATTER));
         if (game.getPlayers() != null) {
           for (String player : game.getPlayers()) {
             writer.print("\t");
@@ -129,10 +134,17 @@ public class NationsUtils {
         }
         Game game = new Game(cols[0], cols[1]);
         game.setRound(cols[2]);
-        game.setLastUpdated(LocalDateTime.parse(cols[3], DATE_TIME_FORMATTER));
-        int maxCol = Math.min(4 + sf_numPlayers, cols.length);
+        if (StringUtils.stripToNull(cols[3]) != null) {
+          game.setGameStarted(LocalDateTime.parse(cols[3], DATE_TIME_FORMATTER));
+        }
+        game.setLastUpdated(LocalDateTime.parse(cols[4], DATE_TIME_FORMATTER));
+        if (StringUtils.stripToNull(cols[5]) != null) {
+          game.setGameFinished(LocalDateTime.parse(cols[5], DATE_TIME_FORMATTER));
+        }
+
+        int maxCol = Math.min(6 + sf_numPlayers, cols.length);
         List<String[]> players = new ArrayList<>();
-        for (int x = 4; x < maxCol; x += 1) {
+        for (int x = 6; x < maxCol; x += 1) {
           Matcher playerMatcher = sf_tsvPlayerPattern.matcher(cols[x]);
           if (!playerMatcher.matches()) {
             throw new IllegalArgumentException("Unexpected player data on line " + rowNum + ": '" +
