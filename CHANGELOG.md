@@ -1,3 +1,10 @@
+### [1.2.2](https://github.com/markwoon/NationsTournamentTool/compare/v1.2.1...v1.2.2) (2021-04-13)
+
+
+### Bug Fixes
+
+* remove [skip ci] to trigger release ([5e7a73f](https://github.com/markwoon/NationsTournamentTool/commit/5e7a73f6afb70e39f092a573442b37f6644cebb8))
+
 ### [1.2.1](https://github.com/markwoon/NationsTournamentTool/compare/v1.2.0...v1.2.1) (2021-04-13)
 
 
