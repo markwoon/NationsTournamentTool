@@ -1,3 +1,10 @@
+### [1.2.4](https://github.com/markwoon/NationsTournamentTool/compare/v1.2.3...v1.2.4) (2021-04-13)
+
+
+### Bug Fixes
+
+* fix GH actions ([01677ff](https://github.com/markwoon/NationsTournamentTool/commit/01677ffbe9fc833501a564f44493a923279af762))
+
 ### [1.2.3](https://github.com/markwoon/NationsTournamentTool/compare/v1.2.2...v1.2.3) (2021-04-13)
 
 
