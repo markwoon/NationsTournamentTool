@@ -1,3 +1,10 @@
+### [1.2.3](https://github.com/markwoon/NationsTournamentTool/compare/v1.2.2...v1.2.3) (2021-04-13)
+
+
+### Bug Fixes
+
+* cleanup ([bbb512f](https://github.com/markwoon/NationsTournamentTool/commit/bbb512f60745aacc4a7a7846be19cab97de279e5))
+
 ### [1.2.2](https://github.com/markwoon/NationsTournamentTool/compare/v1.2.1...v1.2.2) (2021-04-13)
 
 
