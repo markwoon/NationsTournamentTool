@@ -26,7 +26,8 @@
           "replacements": [
             {
               "files": [
-                "gradle.properties"
+                "gradle.properties",
+                "src/main/resources/org/markwoon/nations/TournamentTool.properties"
               ],
               "from": "version=.*",
               "to": "version=${nextRelease.version}",
@@ -36,17 +37,7 @@
                   "hasChanged": true,
                   "numMatches": 1,
                   "numReplacements": 1
-                }
-              ],
-              "countMatches": true
-            },
-            {
-              "files": [
-                "src/main/resources/org/markwoon/nations/TournamentTool.properties"
-              ],
-              "from": "version=.*",
-              "to": "version=${nextRelease.version}",
-              "results": [
+                },
                 {
                   "file": "src/main/resources/org/markwoon/nations/TournamentTool.properties",
                   "hasChanged": true,
@@ -80,11 +71,11 @@
         "@semantic-release/git",
         {
           "assets": [
+            "CHANGELOG.md",
             "gradle.properties",
             "package.json",
-            "CHANGELOG.md"
-          ],
-          "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
+            "src/main/resources/org/markwoon/nations/TournamentTool.properties"
+          ]
         }
       ]
     ],
