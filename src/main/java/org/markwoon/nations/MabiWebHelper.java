@@ -12,7 +12,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -400,14 +399,10 @@ public class MabiWebHelper {
   private static final class NewGame {
     String name;
     Level level;
-    List<String> players;
 
-    NewGame(String name, Level level, String... players) {
+    NewGame(String name, Level level) {
       this.name = name;
       this.level = level;
-      if (players != null) {
-        this.players = Arrays.asList(players);
-      }
     }
 
     @Override
