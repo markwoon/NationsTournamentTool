@@ -1,3 +1,11 @@
+### [1.2.1](https://github.com/markwoon/NationsTournamentTool/compare/v1.2.0...v1.2.1) (2021-04-13)
+
+
+### Bug Fixes
+
+* add game start/finish time to improve slowest player calculations ([546d0e2](https://github.com/markwoon/NationsTournamentTool/commit/546d0e2bb0dc33274e86eaa0fa2b6c5ba6aeb86b))
+* show app version in title ([df14fa6](https://github.com/markwoon/NationsTournamentTool/commit/df14fa642ad7c548fb5e444932952fda3d300fc7))
+
 ## [1.2.0](https://github.com/markwoon/NationsTournamentTool/compare/v1.1.2...v1.2.0) (2021-03-12)
 
 
