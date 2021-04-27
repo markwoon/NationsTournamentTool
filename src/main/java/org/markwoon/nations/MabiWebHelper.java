@@ -206,7 +206,7 @@ public class MabiWebHelper {
       List<String> players = new ArrayList<>();
       for (String[] p : playerData) {
         players.add(p[0]);
-        game.setScore(p[0], Integer.parseInt(p[1]));
+        game.setVp(p[0], Integer.parseInt(p[1]));
       }
       game.setPlayers(players);
       game.setActivePlayer(null);
@@ -239,7 +239,7 @@ public class MabiWebHelper {
         String vpTable = vpTableMatcher.group(1);
         Matcher vpMatcher = sf_vpPattern.matcher(vpTable);
         while (vpMatcher.find()) {
-          game.setScore(vpMatcher.group(1), Integer.parseInt(vpMatcher.group(2)));
+          game.setVp(vpMatcher.group(1), Integer.parseInt(vpMatcher.group(2)));
         }
       }
     }

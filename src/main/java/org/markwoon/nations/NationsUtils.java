@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
@@ -20,6 +21,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.markwoon.nations.model.Game;
 import org.markwoon.nations.model.PlayerPoints;
 
+import static com.google.common.io.Files.getNameWithoutExtension;
+
 
 /**
  * Utilities for reading/writing Nations data.
@@ -29,47 +32,83 @@ import org.markwoon.nations.model.PlayerPoints;
 public class NationsUtils {
   public static final DateTimeFormatter DATE_TIME_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+  public static final DateTimeFormatter DATE_TIME_FORMATTER2 =
+      DateTimeFormatter.ofPattern("M/d/yyyy H:m");
   private static final int sf_numPlayers = 3;
 
-  public static void writeTsv(SortedMap<String, Game> games, Path file,
-      boolean calculateFinalUnfinishedGameScore) throws IOException {
 
-    try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(file))) {
+  private static void writeHeaders(PrintWriter tsvWriter, ExcelWriter xlsWriter) {
+    List<String> headers = new ArrayList<>();
+    headers.add("Game ID");
+    headers.add("Game Name");
+    headers.add("Round");
+    headers.add("Started");
+    headers.add("Last Updated");
+    headers.add("Finished");
+    for (int x = 1; x <= sf_numPlayers; x += 1) {
+      headers.add("P" + x);
+      headers.add("Country");
+      headers.add("VP");
+      headers.add("Workers");
+      headers.add("Points");
+      headers.add("Score");
+      headers.add("Time");
+    }
+    headers.add("Tournament Points");
+    for (String header : headers) {
+      tsvWriter.print(header);
+      tsvWriter.print("\t");
+      xlsWriter.writeHeader(header);
+    }
+    tsvWriter.println();
+  }
+
+  private static void writeCell(PrintWriter tsvWriter, ExcelWriter xlsWriter, String value) {
+    tsvWriter.print(value);
+    tsvWriter.print("\t");
+    xlsWriter.writeCell(value);
+  }
+
+  private static void writeCell(PrintWriter tsvWriter, ExcelWriter xlsWriter, long value) {
+    tsvWriter.print(value);
+    tsvWriter.print("\t");
+    xlsWriter.writeCell(value);
+  }
+
+
+  public static void writeTsv(SortedMap<String, Game> games, Path file,
+      boolean addSlowPenalty) throws IOException {
+
+    try (PrintWriter tsvWriter = new PrintWriter(Files.newBufferedWriter(file));
+         ExcelWriter xlsWriter = new ExcelWriter("Tournament")) {
+      writeHeaders(tsvWriter, xlsWriter);
+
       DecimalFormat decimalFormat = new DecimalFormat();
       decimalFormat.setMaximumFractionDigits(2);
       SortedMap<String, SortedMap<String, PlayerPoints>> totalPoints = new TreeMap<>();
-      writer.print("Game ID\tGame Name\tRound\tStarted\tLast Updated\tFinished\t");
-      for (int x = 0; x < sf_numPlayers; x += 1) {
-        writer.print("Player " + (x + 1) + "\t");
-      }
-      writer.println("Tournament Points");
       for (String name : games.keySet()) {
         Game game = games.get(name);
-        writer.print(game.getId());
-        writer.print("\t");
-        writer.print(game.getName());
-        writer.print("\t");
-        writer.print(game.getRound());
-        writer.print("\t");
-        writer.print(game.getGameStarted() == null ? "" : game.getGameStarted().format(DATE_TIME_FORMATTER));
-        writer.print("\t");
-        writer.print(game.getLastUpdated() == null ? "" : game.getLastUpdated().format(DATE_TIME_FORMATTER));
-        writer.print("\t");
-        writer.print(game.getGameFinished() == null ? "" : game.getGameFinished().format(DATE_TIME_FORMATTER));
+        if (game.hasVp()) {
+          game.calculatePoints(games.values(), addSlowPenalty, LocalDateTime.now());
+        }
+        xlsWriter.newRow();
+        writeCell(tsvWriter, xlsWriter, game.getId());
+        writeCell(tsvWriter, xlsWriter, game.getName());
+        writeCell(tsvWriter, xlsWriter, game.getRound());
+        writeCell(tsvWriter, xlsWriter, game.getGameStarted() == null ? "" : game.getGameStarted().format(DATE_TIME_FORMATTER));
+        writeCell(tsvWriter, xlsWriter, game.getLastUpdated() == null ? "" : game.getLastUpdated().format(DATE_TIME_FORMATTER));
+        writeCell(tsvWriter, xlsWriter, game.getGameFinished() == null ? "" : game.getGameFinished().format(DATE_TIME_FORMATTER));
         if (game.getPlayers() != null) {
           for (String player : game.getPlayers()) {
-            writer.print("\t");
-            writer.print(player);
-            if (game.getCountry(player) != null) {
-              writer.print(" (" + game.getCountry(player) + ", ");
-              if (!game.isFinished()) {
-                writer.print(game.getUnusedWorkers(player) + " unused workers, ");
-              }
-              writer.print(game.getScore(player) + "vp)");
-            }
+            writeCell(tsvWriter, xlsWriter, player);
+            writeCell(tsvWriter, xlsWriter, game.getCountry(player));
+            writeCell(tsvWriter, xlsWriter, game.getVp(player));
+            writeCell(tsvWriter, xlsWriter, game.getUnusedWorkers(player));
+            writeCell(tsvWriter, xlsWriter, game.getVp(player) + game.getUnusedWorkers(player));
+            writeCell(tsvWriter, xlsWriter, decimalFormat.format(game.getPoints(player)));
+            writeCell(tsvWriter, xlsWriter, game.getElapsedTime(player));
           }
-          if (game.hasScores()) {
-            game.calculatePoints(games.values(), calculateFinalUnfinishedGameScore);
+          if (game.hasVp()) {
             StringBuilder builder = new StringBuilder();
             for (String player : game.getPlayers()) {
               if (builder.length() > 0) {
@@ -90,25 +129,43 @@ public class NationsUtils {
               playerPoints.addPoints(points, game.isFinished());
             }
 
-            writer.print("\t");
-            writer.print(builder.toString());
+            writeCell(tsvWriter, xlsWriter, builder.toString());
           }
         }
-        writer.println();
+        tsvWriter.println();
       }
-      writer.println();
+      xlsWriter.newRow();
+
       for (String group : totalPoints.keySet()) {
-        writer.print("\t\t\t\t\t\tGroup " + group);
+        newResultRow(tsvWriter, xlsWriter);
+        writeCell(tsvWriter, xlsWriter, "Group " + group);
         boolean started = false;
         for (PlayerPoints pp : new TreeSet<>(totalPoints.get(group).values())) {
+          newResultRow(tsvWriter, xlsWriter);
           if (started) {
-            writer.println("\t\t\t\t\t\t\t" + pp);
+            writeCell(tsvWriter, xlsWriter, pp.toString());
           } else {
-            writer.println("\t" + pp);
+            writeCell(tsvWriter, xlsWriter, pp.toString());
             started = true;
           }
         }
+        tsvWriter.println();
+        xlsWriter.newRow();
       }
+
+      //noinspection UnstableApiUsage
+      Path excelFile = file.getParent()
+          .resolve(getNameWithoutExtension(file.getFileName().toString()) + ".xls");
+      xlsWriter.save(excelFile);
+    }
+  }
+
+  private static void newResultRow(PrintWriter tsvWriter, ExcelWriter xlsWriter) {
+    tsvWriter.println();
+    xlsWriter.newRow();
+    for (int x = 0; x < 27; x += 1) {
+      tsvWriter.print("\t");
+      xlsWriter.writeCell("");
     }
   }
 
@@ -116,6 +173,14 @@ public class NationsUtils {
   private static final Pattern sf_tsvPlayerPattern = Pattern.compile("(\\w+)(?: \\((.*?)\\))?");
   private static final Pattern sf_tsvPlayerStatPattern = Pattern.compile("(\\w+?), (\\d+) unused workers, (\\d+)vp");
   private static final Pattern sf_tsvFinishedPlayerStatPattern = Pattern.compile("(\\w+?), (\\d+)vp");
+
+  private static LocalDateTime parseTime(String text) {
+    try {
+      return LocalDateTime.parse(text, DATE_TIME_FORMATTER);
+    } catch (DateTimeParseException ex) {
+      return LocalDateTime.parse(text, DATE_TIME_FORMATTER2);
+    }
+  }
 
   public static SortedMap<String, Game> readTsv(Path file) throws IOException {
 
@@ -135,11 +200,11 @@ public class NationsUtils {
         Game game = new Game(cols[0], cols[1]);
         game.setRound(cols[2]);
         if (StringUtils.stripToNull(cols[3]) != null) {
-          game.setGameStarted(LocalDateTime.parse(cols[3], DATE_TIME_FORMATTER));
+          game.setGameStarted(parseTime(cols[3]));
         }
-        game.setLastUpdated(LocalDateTime.parse(cols[4], DATE_TIME_FORMATTER));
+        game.setLastUpdated(parseTime(cols[4]));
         if (StringUtils.stripToNull(cols[5]) != null) {
-          game.setGameFinished(LocalDateTime.parse(cols[5], DATE_TIME_FORMATTER));
+          game.setGameFinished(parseTime(cols[5]));
         }
 
         int maxCol = Math.min(6 + sf_numPlayers, cols.length);
@@ -172,10 +237,10 @@ public class NationsUtils {
             }
             game.setCountry(player, statMatcher.group(1));
             if (game.isFinished()) {
-              game.setScore(player, Integer.parseInt(statMatcher.group(2)));
+              game.setVp(player, Integer.parseInt(statMatcher.group(2)));
             } else {
               game.setUnusedWorkers(player, Integer.parseInt(statMatcher.group(2)));
-              game.setScore(player, Integer.parseInt(statMatcher.group(3)));
+              game.setVp(player, Integer.parseInt(statMatcher.group(3)));
             }
           }
         }

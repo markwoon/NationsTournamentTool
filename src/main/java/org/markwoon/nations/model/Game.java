@@ -26,28 +26,29 @@ public class Game {
   public static final String ROUND_FINISHED = "finished";
   private static final Pattern sf_gameGroupPattern = Pattern.compile("- Group ([A-Za-z]+) -");
   private static final Pattern sf_roundPattern = Pattern.compile("\\w+ \\((.*)\\) - ([AB])");
-  private final String id;
-  private final String name;
-  private final String group;
-  private List<String> players;
-  private String round;
-  private LocalDateTime gameStarted;
-  private LocalDateTime gameFinished;
-  private LocalDateTime lastUpdated;
-  private String activePlayer;
-  private String slowestPlayer;
-  private final Map<String, String> countries = new HashMap<>();
-  private final Map<String, Integer> scores = new HashMap<>();
-  private final Map<String, Integer> unusedWorkers = new HashMap<>();
-  private final Map<String, Float> points = new HashMap<>();
+  private final String m_id;
+  private final String m_name;
+  private final String m_group;
+  private List<String> m_players;
+  private String m_round;
+  private LocalDateTime m_gameStarted;
+  private LocalDateTime m_gameFinished;
+  private LocalDateTime m_lastUpdated;
+  private String m_activePlayer;
+  private String m_slowestPlayer;
+  private final Map<String, String> m_countries = new HashMap<>();
+  private final Map<String, Integer> m_vp = new HashMap<>();
+  private final Map<String, Integer> m_unusedWorkers = new HashMap<>();
+  private final Map<String, Float> m_points = new HashMap<>();
+  private final Map<String, Long> m_elapsedTime = new HashMap<>();
 
 
   public Game(String id, String name) {
-    this.id = id;
-    this.name = name;
+    m_id = id;
+    m_name = name;
     Matcher m = sf_gameGroupPattern.matcher(name);
     if (m.find()) {
-      group = m.group(1);
+      m_group = m.group(1);
     } else {
       throw new IllegalArgumentException("Game name doesn't have valid group");
     }
@@ -55,24 +56,24 @@ public class Game {
 
 
   public String getId() {
-    return id;
+    return m_id;
   }
 
   public String getName() {
-    return name;
+    return m_name;
   }
 
   public String getGroup() {
-    return group;
+    return m_group;
   }
 
 
   public @Nullable String getRound() {
-    return round;
+    return m_round;
   }
 
   public void setRound(String round) {
-    this.round = round;
+    m_round = round;
   }
 
   public void setRoundString(String roundString) {
@@ -81,41 +82,41 @@ public class Game {
       throw new IllegalArgumentException("Unexpected round format: " + roundString);
     }
     switch (m.group(1)) {
-      case "I" -> this.round = "1" + m.group(2);
-      case "II" -> this.round = "2" + m.group(2);
-      case "III" -> this.round = "3" + m.group(2);
-      case "II II" -> this.round = "4" + m.group(2);
+      case "I" -> m_round = "1" + m.group(2);
+      case "II" -> m_round = "2" + m.group(2);
+      case "III" -> m_round = "3" + m.group(2);
+      case "II II" -> m_round = "4" + m.group(2);
     }
   }
 
   public boolean isFinished() {
-    return ROUND_FINISHED.equals(round);
+    return ROUND_FINISHED.equals(m_round);
   }
 
 
   public LocalDateTime getGameStarted() {
-    return gameStarted;
+    return m_gameStarted;
   }
 
   public void setGameStarted(LocalDateTime gameStarted) {
-    this.gameStarted = gameStarted;
+    m_gameStarted = gameStarted;
   }
 
   public LocalDateTime getGameFinished() {
-    return gameFinished;
+    return m_gameFinished;
   }
 
   public void setGameFinished(LocalDateTime gameFinished) {
-    this.gameFinished = gameFinished;
+    m_gameFinished = gameFinished;
   }
 
 
   public LocalDateTime getLastUpdated() {
-    return lastUpdated;
+    return m_lastUpdated;
   }
 
   public void setLastUpdated(LocalDateTime lastUpdated) {
-    this.lastUpdated = lastUpdated;
+    m_lastUpdated = lastUpdated;
   }
 
 
@@ -123,23 +124,22 @@ public class Game {
    * Gets players in turn order.
    */
   public List<String> getPlayers() {
-    return players;
+    return m_players;
   }
 
   public void setPlayers(List<String> players) {
-    this.players = players;
+    m_players = players;
   }
-
 
   /**
    * Gets current player (null if game is over).
    */
   public @Nullable String getActivePlayer() {
-    return activePlayer;
+    return m_activePlayer;
   }
 
   public void setActivePlayer(@Nullable String activePlayer) {
-    this.activePlayer = activePlayer;
+    m_activePlayer = activePlayer;
   }
 
 
@@ -147,71 +147,74 @@ public class Game {
    * Only set after calculating score for an unfinished game.
    */
   public @Nullable String getSlowestPlayer() {
-    return slowestPlayer;
+    return m_slowestPlayer;
   }
 
 
   public String getCountry(String player) {
-    return countries.get(player);
+    return m_countries.get(player);
   }
 
   public void setCountry(String player, String country) {
-    countries.put(player, country);
+    m_countries.put(player, country);
   }
 
 
   public int getUnusedWorkers(String player) {
-    if (unusedWorkers.containsKey(player)) {
-      return unusedWorkers.get(player);
+    if (m_unusedWorkers.containsKey(player)) {
+      return m_unusedWorkers.get(player);
     }
     return 0;
   }
 
   public void setUnusedWorkers(String player, int numUnusedWorkers) {
-    unusedWorkers.put(player, numUnusedWorkers);
+    m_unusedWorkers.put(player, numUnusedWorkers);
   }
 
 
-  public int getScore(String player) {
-    if (scores.containsKey(player)) {
-      return scores.get(player);
+  public int getVp(String player) {
+    if (m_vp.containsKey(player)) {
+      return m_vp.get(player);
     }
     return 0;
   }
 
-  public void setScore(String player, int score) {
-    if (!players.contains(player)) {
-      throw new IllegalArgumentException("Player '" + player + "' is not in this game " + players);
+  public void setVp(String player, int vp) {
+    if (!m_players.contains(player)) {
+      throw new IllegalArgumentException("Player '" + player + "' is not in this game " + m_players);
     }
-    scores.put(player, score);
+    m_vp.put(player, vp);
   }
 
-  public boolean hasScores() {
-    return !scores.isEmpty();
+  public boolean hasVp() {
+    return !m_vp.isEmpty();
   }
 
 
   public float getPoints(String player) {
-    return points.get(player);
+    return m_points.get(player);
   }
+
+  public long getElapsedTime(String player) {
+    return m_elapsedTime.get(player);
+  }
+
 
   /**
    * Calculates tournament points for players.
    */
-  public void calculatePoints(Collection<Game> games, boolean calculateFinalUnfinishedGameScore) {
-    if (!isFinished() && calculateFinalUnfinishedGameScore) {
-      calculateSlowestPlayer(games);
-    }
-    if (hasScores()) {
+  public void calculatePoints(Collection<Game> games, boolean addSlowPenalty,
+      LocalDateTime currentTime) {
+    calculateSlowestPlayer(games, currentTime);
+    if (hasVp()) {
       List<Object[]> scoreData = new ArrayList<>();
       int total = 0;
       int order = 0;
-      for (String p : players) {
-        int score = scores.get(p);
+      for (String p : m_players) {
+        int score = m_vp.get(p) + getUnusedWorkers(p);
         int slowPenalty = 0;
-        if (!isFinished() && calculateFinalUnfinishedGameScore) {
-          score += getUnusedWorkers(p);
-          if (p.equals(slowestPlayer)) {
+        if (!isFinished() && addSlowPenalty) {
+          if (p.equals(m_slowestPlayer)) {
             slowPenalty = -10;
           }
         }
@@ -239,71 +242,59 @@ public class Game {
           bonus += 5;
         }
         float score = ((Integer)data[1] / (float)total * 100) + bonus;
-        points.put((String)data[0], score);
+        m_points.put((String)data[0], score);
       }
     }
   }
 
-  private void calculateSlowestPlayer(Collection<Game> games) {
+  private void calculateSlowestPlayer(Collection<Game> games, LocalDateTime currentTime) {
     // find games with current players
     Multimap<String, Game> playerGames = HashMultimap.create();
-    Multimap<String, Game> ongoingPlayerGames = HashMultimap.create();
     for (Game game : games) {
-      if (game == this) {
-        continue;
-      }
-      for (String p : players) {
+      for (String p : m_players) {
         if (game.getPlayers().contains(p)) {
-          if (!game.isFinished()) {
-            ongoingPlayerGames.put(p, game);
-          }
           playerGames.put(p, game);
         }
       }
     }
-    if (ongoingPlayerGames.keySet().size() == 1) {
-      slowestPlayer = playerGames.keySet().iterator().next();
-    } else {
-      SortedSet<Object[]> data = new TreeSet<>((o1, o2) -> ComparisonChain.start()
-          .compare((int)o2[1], (int)o1[1])
-          .compare((long)o2[2], (long)o1[2])
-          .compare((int)o2[3], (int)o1[3])
-          .result());
-      LocalDateTime curTime = LocalDateTime.now();
-      for (String p : playerGames.keySet()) {
-        long elapsedTime = 0;
-        for (Game g : playerGames.get(p)) {
-          if (g.isFinished()) {
-            elapsedTime += Math.abs(ChronoUnit.MILLIS.between(g.gameStarted, g.gameFinished));
-          } else {
-            elapsedTime += Math.abs(ChronoUnit.MILLIS.between(g.gameStarted, curTime));
-          }
-          data.add(new Object[]{ p, ongoingPlayerGames.get(p).size(), elapsedTime, players.indexOf(p) });
+    SortedSet<Object[]> data = new TreeSet<>((o1, o2) -> ComparisonChain.start()
+        .compare((long)o2[1], (long)o1[1])
+        .compare((int)o1[2], (int)o2[2])
+        .result());
+    for (String p : playerGames.keySet()) {
+      long elapsedTime = 0;
+      for (Game g : playerGames.get(p)) {
+        if (g.isFinished()) {
+          elapsedTime += Math.abs(ChronoUnit.SECONDS.between(g.getGameStarted(), g.getGameFinished()));
+        } else {
+          elapsedTime += Math.abs(ChronoUnit.SECONDS.between(g.getGameStarted(), currentTime));
         }
       }
-      slowestPlayer = (String)data.first()[0];
+      data.add(new Object[]{ p, elapsedTime, m_players.indexOf(p) });
+      m_elapsedTime.put(p, elapsedTime);
     }
+    m_slowestPlayer = (String)data.first()[0];
   }
 
 
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder()
-        .append(id)
+        .append(m_id)
         .append(": ")
-        .append(name)
+        .append(m_name)
         .append(" (")
-        .append(round)
+        .append(m_round)
         .append(") - ");
     boolean started = false;
-    if (players != null) {
-      for (String player : players) {
+    if (m_players != null) {
+      for (String player : m_players) {
         if (started) {
           builder.append(", ");
         } else {
           started = true;
         }
-        if (player.equals(activePlayer)) {
+        if (player.equals(m_activePlayer)) {
           builder.append("_")
               .append(player)
               .append("_");
@@ -315,7 +306,7 @@ public class Game {
             .append(", ")
             .append(getUnusedWorkers(player))
             .append(" unused workers, ")
-            .append(getScore(player))
+            .append(getVp(player))
             .append("vp)");
       }
     }
