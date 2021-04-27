@@ -4,6 +4,7 @@ plugins {
   // javafx plugin must come before jlink plugin
   id 'org.openjfx.javafxplugin' version '0.0.9'
   id 'org.beryx.jlink' version '2.23.3'
+  id 'org.javamodularity.moduleplugin' version '1.8.1'
 }
 
 sourceCompatibility = JavaVersion.VERSION_14
@@ -27,15 +28,11 @@ dependencies {
   implementation group: 'com.google.guava', name: 'guava', version: '30.1-jre'
   implementation group: 'org.checkerframework', name: 'checker-qual', version: '3.10.0'
   implementation group: 'org.jsoup', name: 'jsoup', version: '1.13.1'
+  implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
+  testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.7.1'
 }
 
-
-java {
-  modularity.inferModulePath = true
-}
-
-// workaround for https://github.com/java9-modularity/gradle-modules-plugin/issues/165
-modularity.disableEffectiveArgumentsAdjustment()
 
 javafx {
   version = "14"
@@ -45,6 +42,30 @@ javafx {
 application {
   mainModule    = 'org.markwoon.nations'
   mainClassName = 'org.markwoon.nations.TournamentTool'
+}
+
+test {
+  moduleOptions {
+    addExports = [
+        "org.junit.platform.commons/org.junit.platform.commons.util": "ALL-UNNAMED",
+        "org.junit.platform.commons/org.junit.platform.commons.logging": "ALL-UNNAMED"
+    ]
+  }
+
+  useJUnitPlatform()
+  testLogging {
+    // set options for log level LIFECYCLE
+    events 'passed', 'skipped', 'failed'
+    exceptionFormat 'short'
+
+    // remove standard output/error logging from --info builds
+    // by assigning only 'failed' and 'skipped' events
+    info.events = ['failed', 'skipped']
+
+    // set options for log level DEBUG
+    debug.events = ['started', 'passed', 'skipped', 'failed']
+    debug.exceptionFormat = 'full'
+  }
 }
 
 jlink {
