@@ -17,4 +17,5 @@ module org.markwoon.nations {
   requires org.jsoup;
 
   opens org.markwoon.nations to javafx.fxml, javafx.graphics;
+  opens org.markwoon.nations.ui to javafx.fxml, javafx.graphics;
 }

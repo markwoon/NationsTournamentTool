@@ -25,7 +25,7 @@ public class TournamentTool extends Application {
 
     Parent root = FXMLLoader.load(getClass().getResource("TournamentTool.fxml"));
     primaryStage.setTitle("Nations Tournament Tool" + version);
-    primaryStage.setScene(new Scene(root, 600, 300));
+    primaryStage.setScene(new Scene(root, 600, 320));
 
     primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("marie_curie.png")));
     primaryStage.show();

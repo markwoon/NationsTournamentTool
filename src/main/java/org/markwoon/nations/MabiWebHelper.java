@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.net.HttpHeaders;
-import org.apache.commons.text.WordUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -374,14 +374,22 @@ public class MabiWebHelper {
   }
 
 
-  public List<NewGame> buildTournamentGameList(String prefix, Level groupLevel) {
+  public static List<NewGame> buildTournamentGameList(String prefix, String group, int subgroup) {
+    prefix = StringUtils.stripToNull(prefix);
     Preconditions.checkNotNull(prefix);
-    prefix = prefix.trim();
-    Preconditions.checkArgument(prefix.length() > 0);
+    group = StringUtils.stripToNull(group);
+    Preconditions.checkNotNull(group);
+    Preconditions.checkArgument(group.length() == 1);
+    Preconditions.checkArgument(subgroup > -1 && subgroup < 9);
 
     List<NewGame> games = new ArrayList<>();
-    int groupNum = groupLevel.ordinal() + 1;
-    String groupName = prefix + " - Group " + WordUtils.capitalizeFully(groupLevel.name());
+    String groupName = prefix + " - Group " + group.toUpperCase();
+    int groupNum = group.toUpperCase().charAt(0) - 'A' + 1;
+    int subMod = 0;
+    if (subgroup > 0) {
+      groupName += subgroup;
+      subMod = (subgroup - 1) * 12;
+    }
     for (int gameNum = 1; gameNum <= 12; gameNum += 1) {
       Level level = Level.CHIEFTAIN;
       if (gameNum <= 3) {
@@ -391,23 +399,26 @@ public class MabiWebHelper {
       } else if (gameNum <= 9) {
         level = Level.PRINCE;
       }
-      games.add(new NewGame(groupName + " - Game " + groupNum + String.format("%02d", gameNum), level));
+      String gameId = groupNum + String.format("%02d", gameNum + subMod);
+      games.add(new NewGame(groupName + " - Game " + gameId, gameId, level));
     }
     return games;
   }
 
-  private static final class NewGame {
+  static final class NewGame {
     String name;
+    String password;
     Level level;
 
-    NewGame(String name, Level level) {
+    NewGame(String name, String password, Level level) {
       this.name = name;
+      this.password = password;
       this.level = level;
     }
 
     @Override
     public String toString() {
-      return name + " (" + level + ")";
+      return name + "    (password='" + password + "', level=" + level + ")";
     }
   }
 }
