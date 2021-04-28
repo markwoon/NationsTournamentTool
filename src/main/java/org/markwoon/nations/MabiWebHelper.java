@@ -139,8 +139,13 @@ public class MabiWebHelper {
     LastUpdatedHelper lastUpdatedHelper = new LastUpdatedHelper();
     for (String key : games.keySet()) {
       Game game = games.get(key);
-      getGameDetails(game);
-      lastUpdatedHelper.updateLastUpdated(game);
+      boolean gotDetails = getGameDetails(game);
+      boolean gotLastUpdated = lastUpdatedHelper.updateLastUpdated(game);
+      // if can't get details and can't get last updated, game has expired on MabiWeb
+      // mark game as dead if it isn't already finished
+      if (!gotDetails && !gotLastUpdated && !game.isFinished()) {
+        game.setRound(Game.ROUND_DEAD);
+      }
     }
   }
 
@@ -165,13 +170,13 @@ public class MabiWebHelper {
   /**
    * Gets the details of a specific game.
    */
-  public static void getGameDetails(Game game) throws IOException {
+  public static boolean getGameDetails(Game game) throws IOException {
     Document doc = Jsoup.connect("http://www.mabiweb.com/modules.php?name=GM_Nations&op=view_game_reset&g_id=" + game.getId())
         .get();
 
     if (doc.text().contains("Error: can't load position for game with ID")) {
       // game has not started
-      return;
+      return false;
     }
 
     Element header = doc.getElementById("nations-gameheader");
@@ -267,6 +272,7 @@ public class MabiWebHelper {
         }
       }
     }
+    return true;
   }
 
 
@@ -285,7 +291,7 @@ public class MabiWebHelper {
           .get();
     }
 
-    void updateLastUpdated(Game game) throws IOException {
+    boolean updateLastUpdated(Game game) throws IOException {
       Document doc = game.isFinished() ? m_finishedGames : m_runningGames;
       for (Element tr : doc.select("#gamemanager-gamelists > table > tbody > tr")) {
         Elements tds = tr.select("td");
@@ -293,11 +299,10 @@ public class MabiWebHelper {
         if (name.startsWith(game.getName())) {
           String lastUpdate = tds.get(5).text();
           game.setLastUpdated(calculateTimestamp(lastUpdate));
-          return;
+          return true;
         }
       }
-      throw new IllegalStateException("Cannot find " + game.getName() + " in list of " +
-          (game.isFinished() ? "finished" : "running") + " games");
+      return false;
     }
   }
 

@@ -15,6 +15,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.util.IOUtils;
+import org.markwoon.nations.model.Game;
 
 
 /**
@@ -25,6 +26,8 @@ import org.apache.poi.util.IOUtils;
 public class ExcelWriter implements AutoCloseable {
   private final Workbook m_workbook;
   private final CellStyle m_headerStyle;
+  private final CellStyle m_finishedStyle;
+  private final CellStyle m_deadStyle;
   private final Sheet m_sheet;
   private Row m_headerRow;
   private Row m_currentRow;
@@ -41,6 +44,18 @@ public class ExcelWriter implements AutoCloseable {
     Font boldFont = m_workbook.createFont();
     boldFont.setBold(true);
     m_headerStyle.setFont(boldFont);
+
+    m_finishedStyle = m_workbook.createCellStyle();
+    addBorder(m_finishedStyle);
+    Font blueFont = m_workbook.createFont();
+    blueFont.setColor(IndexedColors.ROYAL_BLUE.getIndex());
+    m_finishedStyle.setFont(blueFont);
+
+    m_deadStyle = m_workbook.createCellStyle();
+    addBorder(m_deadStyle);
+    Font redFont = m_workbook.createFont();
+    redFont.setColor(IndexedColors.RED.getIndex());
+    m_deadStyle.setFont(redFont);
   }
 
   @Override
@@ -64,19 +79,31 @@ public class ExcelWriter implements AutoCloseable {
   }
 
 
-  public void writeCell(String value) {
+  private void setCellStyle(Cell cell, Game game) {
+    if (game != null) {
+      if (game.isFinished()) {
+        cell.setCellStyle(m_finishedStyle);
+      } else if (game.isDead()) {
+        cell.setCellStyle(m_deadStyle);
+      }
+    }
+  }
+
+  public void writeCell(String value, Game game) {
     if (m_currentRow == null) {
       m_currentRow = m_sheet.createRow(1);
     }
     Cell cell = m_currentRow.createCell(getNextCellId(m_currentRow));
+    setCellStyle(cell, game);
     cell.setCellValue(value);
   }
 
-  public void writeCell(double value) {
+  public void writeCell(double value, Game game) {
     if (m_currentRow == null) {
       m_currentRow = m_sheet.createRow(1);
     }
     Cell cell = m_currentRow.createCell(getNextCellId(m_currentRow));
+    setCellStyle(cell, game);
     cell.setCellValue(value);
   }
 

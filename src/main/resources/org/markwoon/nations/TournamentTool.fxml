@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
+<?xml version="1.0" encoding="UTF-8"?><?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import org.markwoon.nations.ui.GroupField?>
@@ -38,7 +37,7 @@
             <bottom>
               <ButtonBar prefHeight="40.0" prefWidth="200.0">
                 <buttons>
-                  <Button mnemonicParsing="false" text="Download List"
+                  <Button fx:id="dlGameListBtn" mnemonicParsing="false" text="Download List"
                       ButtonBar.buttonData="RIGHT" onAction="#downloadList" />
                 </buttons>
                 <padding>
@@ -146,7 +145,7 @@
             <bottom>
               <ButtonBar prefHeight="40.0" prefWidth="200.0">
                 <buttons>
-                  <Button mnemonicParsing="false" text="Create"
+                  <Button fx:id="createGamesBtn" mnemonicParsing="false" text="Create"
                       ButtonBar.buttonData="RIGHT" onAction="#createGames" />
                 </buttons>
                 <padding>

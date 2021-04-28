@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.SortedMap;
@@ -23,6 +24,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -53,9 +55,13 @@ public class Controller  {
   @FXML
   private TextField fileInput;
   @FXML
+  private Button dlGameListBtn;
+
+  @FXML
   private ChoiceBox<String> scoreMode;
   @FXML
   private Button dlGameInfoBtn;
+
   @FXML
   private IntField tournamentNumberInput;
   @FXML
@@ -68,12 +74,32 @@ public class Controller  {
   private TextField userIdInput;
   @FXML
   private TextField passwordInput;
+  @FXML
+  private Button createGamesBtn;
 
   @FXML
   private VBox loading;
 
+  private final List<Control> m_controls = new ArrayList<>();
+
 
   public void initialize() {
+    m_controls.add(tournamentInput);
+    m_controls.add(dirInput);
+    m_controls.add(fileInput);
+    m_controls.add(dlGameListBtn);
+
+    m_controls.add(scoreMode);
+    m_controls.add(dlGameInfoBtn);
+
+    m_controls.add(tournamentNumberInput);
+    m_controls.add(tournamentGroupInput);
+    m_controls.add(tournamentSubgroupInput);
+    m_controls.add(userIdInput);
+    m_controls.add(passwordInput);
+    m_controls.add(createGamesBtn);
+
+
     Preferences prefs = Preferences.userRoot().node(this.getClass().getName());
 
     String prefix = prefs.get(PREFS_TOURNAMENT_PREFIX, "");
@@ -103,6 +129,20 @@ public class Controller  {
     tournamentSubgroupInput.textProperty().addListener(listener);
   }
 
+
+  private void lockInputs() {
+    for (Control c : m_controls) {
+      c.setDisable(true);
+    }
+    loading.setVisible(true);
+  }
+
+  private void reenableInputs() {
+    for (Control c : m_controls) {
+      c.setDisable(false);
+    }
+    loading.setVisible(false);
+  }
 
 
   @FXML
@@ -171,9 +211,7 @@ public class Controller  {
       Path file = dir.resolve(prefix.replaceAll(" ", "_")
           .replaceAll("\\.", "_") + ".tsv");
 
-      dlGameInfoBtn.setDisable(true);
-      loading.setVisible(true);
-
+      lockInputs();
       Task<Void> task = new Task<>() {
         @Override
         protected Void call() throws Exception {
@@ -191,6 +229,7 @@ public class Controller  {
         prefs.put(PREFS_GAME_LIST_FILE, file.toString());
         fileInput.setText(file.toString());
         alert(AlertType.INFORMATION, "Done.\n\nSaved to:\n" + file);
+        reenableInputs();
       });
       task.setOnFailed(evt -> {
         if (task.getException() instanceof RuntimeException &&
@@ -200,15 +239,12 @@ public class Controller  {
         } else {
           alertException(task.getException());
         }
+        reenableInputs();
       });
       new Thread(task).start();
 
     } catch (Exception ex) {
       alertException(ex);
-
-    } finally {
-      loading.setVisible(false);
-      dlGameInfoBtn.setDisable(false);
     }
   }
 
@@ -233,10 +269,6 @@ public class Controller  {
     prefs.put(PREFS_SCORE_MODE, scoreMode.getValue());
 
     try {
-      scoreMode.setDisable(true);
-      dlGameInfoBtn.setDisable(true);
-      loading.setVisible(true);
-
       //noinspection UnstableApiUsage
       String baseFilename = com.google.common.io.Files.getNameWithoutExtension(listFileName);
       if (baseFilename.matches("^(.+)_\\d\\d\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d$")) {
@@ -245,6 +277,7 @@ public class Controller  {
       String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm"));
       Path file = listFile.getParent().resolve(baseFilename + "_" + timestamp + ".tsv");
 
+      lockInputs();
       Task<Void> task = new Task<>() {
         @Override
         protected Void call() throws Exception {
@@ -254,18 +287,18 @@ public class Controller  {
           return null;
         }
       };
-      task.setOnSucceeded(evt ->
-          alert(AlertType.INFORMATION, "Done.\n\nSaved to:\n" + file));
-      task.setOnFailed(evt -> alertException(task.getException()));
+      task.setOnSucceeded(evt -> {
+        alert(AlertType.INFORMATION, "Done.\n\nSaved to:\n" + file);
+        reenableInputs();
+      });
+      task.setOnFailed(evt -> {
+        alertException(task.getException());
+        reenableInputs();
+      });
       new Thread(task).start();
 
     } catch (Exception ex) {
       alertException(ex);
-
-    } finally {
-      loading.setVisible(false);
-      scoreMode.setDisable(false);
-      dlGameInfoBtn.setDisable(false);
     }
   }
 
@@ -300,13 +333,6 @@ public class Controller  {
     }
 
     try {
-      tournamentNumberInput.setDisable(true);
-      tournamentGroupInput.setDisable(true);
-      userIdInput.setDisable(true);
-      passwordInput.setDisable(true);
-      loading.setVisible(true);
-
-
       String prefix = tournamentNum + ".Small Tournament";
       List<MabiWebHelper.NewGame> games =
           MabiWebHelper.buildTournamentGameList(prefix, group, subgroup);
@@ -320,6 +346,7 @@ public class Controller  {
         return;
       }
 
+      lockInputs();
       Task<Integer> task = new Task<>() {
         @Override
         protected Integer call() throws Exception {
@@ -340,19 +367,16 @@ public class Controller  {
         } else {
           alert(AlertType.INFORMATION, "Games created!");
         }
+        reenableInputs();
       });
-      task.setOnFailed(evt -> alertException(task.getException()));
+      task.setOnFailed(evt -> {
+        alertException(task.getException());
+        reenableInputs();
+      });
       new Thread(task).start();
 
     } catch (Exception ex) {
       alertException(ex);
-
-    } finally {
-      loading.setVisible(false);
-      tournamentNumberInput.setDisable(false);
-      tournamentGroupInput.setDisable(false);
-      userIdInput.setDisable(false);
-      passwordInput.setDisable(false);
     }
   }
 

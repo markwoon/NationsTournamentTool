@@ -24,6 +24,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class Game {
   public static final String ROUND_FINISHED = "finished";
+  public static final String ROUND_DEAD = "dead";
   private static final Pattern sf_gameGroupPattern = Pattern.compile("- Group ([A-Za-z]+) -");
   private static final Pattern sf_roundPattern = Pattern.compile("\\w+ \\((.*)\\) - ([AB])");
   private final String m_id;
@@ -91,6 +92,10 @@ public class Game {
 
   public boolean isFinished() {
     return ROUND_FINISHED.equals(m_round);
+  }
+
+  public boolean isDead() {
+    return ROUND_DEAD.equals(m_round);
   }
 
 
@@ -251,6 +256,9 @@ public class Game {
     // find games with current players
     Multimap<String, Game> playerGames = HashMultimap.create();
     for (Game game : games) {
+      if (game.isDead()) {
+        continue;
+      }
       for (String p : m_players) {
         if (game.getPlayers().contains(p)) {
           playerGames.put(p, game);
