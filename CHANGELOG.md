@@ -1,3 +1,10 @@
+### [1.3.1](https://github.com/markwoon/NationsTournamentTool/compare/v1.3.0...v1.3.1) (2021-04-28)
+
+
+### Bug Fixes
+
+* fix build by switching from logback to slf4j-nop ([75e5f93](https://github.com/markwoon/NationsTournamentTool/commit/75e5f9380cdc55a90ccc74d7af439386fd53c419))
+
 ## [1.3.0](https://github.com/markwoon/NationsTournamentTool/compare/v1.2.4...v1.3.0) (2021-04-28)
 
 
