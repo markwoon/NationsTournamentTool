@@ -1,3 +1,16 @@
+## [1.3.0](https://github.com/markwoon/NationsTournamentTool/compare/v1.2.4...v1.3.0) (2021-04-28)
+
+
+### Features
+
+* add support for creating games from app ([0db17a6](https://github.com/markwoon/NationsTournamentTool/commit/0db17a64d046acb09f20164017edca27d27d8527))
+* update exported columns and scoring calc ([1e85f7f](https://github.com/markwoon/NationsTournamentTool/commit/1e85f7fb1647596f52d8f5c22b4553a6d74e5f43))
+
+
+### Bug Fixes
+
+* handle expired games properly ([cdcba70](https://github.com/markwoon/NationsTournamentTool/commit/cdcba70f2ecc361951625564b12f16d3b2424390))
+
 ### [1.2.4](https://github.com/markwoon/NationsTournamentTool/compare/v1.2.3...v1.2.4) (2021-04-13)
 
 
