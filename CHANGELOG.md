@@ -1,3 +1,10 @@
+### [1.3.2](https://github.com/markwoon/NationsTournamentTool/compare/v1.3.1...v1.3.2) (2021-05-04)
+
+
+### Bug Fixes
+
+* avoid NPE when getting list ([886e79d](https://github.com/markwoon/NationsTournamentTool/commit/886e79def48161ca464c9ec8495970f2f4a0ea28))
+
 ### [1.3.1](https://github.com/markwoon/NationsTournamentTool/compare/v1.3.0...v1.3.1) (2021-04-28)
 
 
