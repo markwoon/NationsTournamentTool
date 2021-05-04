@@ -65,6 +65,7 @@ public class NationsUtils {
 
   private static void writeCell(PrintWriter tsvWriter, ExcelWriter xlsWriter, Game game,
       String value) {
+    value = StringUtils.stripToEmpty(value);
     tsvWriter.print(value);
     tsvWriter.print("\t");
     xlsWriter.writeCell(value, game);
@@ -104,7 +105,7 @@ public class NationsUtils {
           for (String player : game.getPlayers()) {
             writeCell(tsvWriter, xlsWriter, game, player);
             writeCell(tsvWriter, xlsWriter, game, game.getCountry(player));
-            if (game.isDead()) {
+            if (game.isDead() || !game.hasVp()) {
               writeCell(tsvWriter, xlsWriter, game, "");
               writeCell(tsvWriter, xlsWriter, game, "");
               writeCell(tsvWriter, xlsWriter, game, "");
