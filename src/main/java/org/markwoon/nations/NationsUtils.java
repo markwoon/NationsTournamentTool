@@ -286,11 +286,19 @@ public class NationsUtils {
       }
       String p = cols[colNum];
       game.getPlayers().add(p);
-      game.setCountry(p, cols[colNum + 1]);
-      if (!game.isDead()) {
-        game.setVp(p, Integer.parseInt(cols[colNum + 2]));
-        if (!game.isFinished()) {
-          game.setUnusedWorkers(p, Integer.parseInt(cols[colNum + 3]));
+      if (cols.length > colNum + 1) {
+        game.setCountry(p, cols[colNum + 1]);
+        if (!game.isDead() && cols.length > colNum + 2) {
+          String v = StringUtils.stripToNull(cols[colNum + 2]);
+          if (v != null) {
+            game.setVp(p, Integer.parseInt(v));
+          }
+          if (!game.isFinished() && cols.length > colNum + 3) {
+            v = StringUtils.stripToNull(cols[colNum + 3]);
+            if (v != null) {
+              game.setUnusedWorkers(p, Integer.parseInt(v));
+            }
+          }
         }
       }
     }
