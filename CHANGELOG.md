@@ -1,3 +1,10 @@
+### [1.3.3](https://github.com/markwoon/NationsTournamentTool/compare/v1.3.2...v1.3.3) (2021-05-10)
+
+
+### Bug Fixes
+
+* fix TSV parsing when not all expected columns are present ([3763ba3](https://github.com/markwoon/NationsTournamentTool/commit/3763ba3cc00377786470a0fd3bbcff84ab29a283))
+
 ### [1.3.2](https://github.com/markwoon/NationsTournamentTool/compare/v1.3.1...v1.3.2) (2021-05-04)
 
 
