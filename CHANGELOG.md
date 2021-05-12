@@ -1,3 +1,10 @@
+### [1.3.4](https://github.com/markwoon/NationsTournamentTool/compare/v1.3.3...v1.3.4) (2021-05-12)
+
+
+### Bug Fixes
+
+* improve support for different date formats and reading tsv that has been exported from Excel ([8883135](https://github.com/markwoon/NationsTournamentTool/commit/88831355c8d8498e4642bf1eea93c05a86079cfe))
+
 ### [1.3.3](https://github.com/markwoon/NationsTournamentTool/compare/v1.3.2...v1.3.3) (2021-05-10)
 
 
