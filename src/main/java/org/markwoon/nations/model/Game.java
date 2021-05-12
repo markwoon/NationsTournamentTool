@@ -273,7 +273,9 @@ public class Game {
       long elapsedTime = 0;
       for (Game g : playerGames.get(p)) {
         if (g.isFinished()) {
-          elapsedTime += Math.abs(ChronoUnit.SECONDS.between(g.getGameStarted(), g.getGameFinished()));
+          if (g.getGameStarted() != null && g.getGameFinished() != null) {
+            elapsedTime += Math.abs(ChronoUnit.SECONDS.between(g.getGameStarted(), g.getGameFinished()));
+          }
         } else {
           elapsedTime += Math.abs(ChronoUnit.SECONDS.between(g.getGameStarted(), currentTime));
         }

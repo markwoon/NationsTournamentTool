@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -30,10 +31,12 @@ import static com.google.common.io.Files.getNameWithoutExtension;
  * @author Mark Woon
  */
 public class NationsUtils {
-  public static final DateTimeFormatter DATE_TIME_FORMATTER =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-  public static final DateTimeFormatter DATE_TIME_FORMATTER2 =
+  public static final DateTimeFormatter MABIWEB_DATE_TIME_FORMATTER =
+      DateTimeFormatter.ofPattern("yyyy-M-d H:m");
+  public static final DateTimeFormatter US_DATE_TIME_FORMATTER =
       DateTimeFormatter.ofPattern("M/d/yyyy H:m");
+  public static final DateTimeFormatter DOT_DATE_TIME_FORMATTER =
+      DateTimeFormatter.ofPattern("d.M.yyyy H:m");
   private static final int sf_numPlayers = 3;
 
 
@@ -98,9 +101,9 @@ public class NationsUtils {
         writeCell(tsvWriter, xlsWriter, game, game.getId());
         writeCell(tsvWriter, xlsWriter, game, game.getName());
         writeCell(tsvWriter, xlsWriter, game, game.getRound());
-        writeCell(tsvWriter, xlsWriter, game, game.getGameStarted() == null ? "" : game.getGameStarted().format(DATE_TIME_FORMATTER));
-        writeCell(tsvWriter, xlsWriter, game, game.getLastUpdated() == null ? "" : game.getLastUpdated().format(DATE_TIME_FORMATTER));
-        writeCell(tsvWriter, xlsWriter, game, game.getGameFinished() == null ? "" : game.getGameFinished().format(DATE_TIME_FORMATTER));
+        writeCell(tsvWriter, xlsWriter, game, game.getGameStarted() == null ? "" : game.getGameStarted().format(MABIWEB_DATE_TIME_FORMATTER));
+        writeCell(tsvWriter, xlsWriter, game, game.getLastUpdated() == null ? "" : game.getLastUpdated().format(MABIWEB_DATE_TIME_FORMATTER));
+        writeCell(tsvWriter, xlsWriter, game, game.getGameFinished() == null ? "" : game.getGameFinished().format(MABIWEB_DATE_TIME_FORMATTER));
         if (game.getPlayers() != null) {
           for (String player : game.getPlayers()) {
             writeCell(tsvWriter, xlsWriter, game, player);
@@ -187,9 +190,19 @@ public class NationsUtils {
 
   private static LocalDateTime parseTime(String text) {
     try {
-      return LocalDateTime.parse(text, DATE_TIME_FORMATTER);
+      return LocalDateTime.parse(text, MABIWEB_DATE_TIME_FORMATTER);
     } catch (DateTimeParseException ex) {
-      return LocalDateTime.parse(text, DATE_TIME_FORMATTER2);
+      try {
+        if (text.contains(".")) {
+          return LocalDateTime.parse(text, DOT_DATE_TIME_FORMATTER);
+        }
+        if (Locale.getDefault().getCountry().equals("US")) {
+          return LocalDateTime.parse(text, US_DATE_TIME_FORMATTER);
+        }
+        throw new IllegalArgumentException("Cannot parse date and time from '" + text + "'");
+      } catch (DateTimeParseException ex2) {
+        throw new IllegalArgumentException("Cannot parse date and time from '" + text + "'");
+      }
     }
   }
 
@@ -208,7 +221,7 @@ public class NationsUtils {
       }
       while (line != null) {
         rowNum += 1;
-        String[] cols = line.split("\t");
+        String[] cols = splitCsvLine(line);
         if (cols.length == 0 || cols[0] == null || cols[0].trim().equals("")) {
           break;
         }
@@ -235,12 +248,28 @@ public class NationsUtils {
     return games;
   }
 
+  private static String[] splitCsvLine(String line) {
+    String[] cols = line.split("\t");
+    for (int x = 0; x < cols.length; x += 1) {
+      String value = StringUtils.stripToNull(cols[x]);
+      if (value != null && value.startsWith("\"") && value.endsWith("\"")) {
+        value = StringUtils.stripToNull(value.substring(1, value.length() - 1));
+      }
+      cols[x] = value;
+    }
+    return cols;
+  }
+
 
   private static void parseFmt1Players(String[] cols, int rowNum, Game game) {
     int maxCol = Math.min(6 + sf_numPlayers, cols.length);
     List<String[]> players = new ArrayList<>();
     for (int x = 6; x < maxCol; x += 1) {
-      Matcher playerMatcher = sf_tsvPlayerPattern.matcher(cols[x]);
+      String player = cols[x];
+      if (player == null) {
+        throw new IllegalArgumentException("Missing player info");
+      }
+      Matcher playerMatcher = sf_tsvPlayerPattern.matcher(player);
       if (!playerMatcher.matches()) {
         throw new IllegalArgumentException("Unexpected player data on line " + rowNum + ": '" +
             cols[x] + "'");
@@ -289,14 +318,12 @@ public class NationsUtils {
       if (cols.length > colNum + 1) {
         game.setCountry(p, cols[colNum + 1]);
         if (!game.isDead() && cols.length > colNum + 2) {
-          String v = StringUtils.stripToNull(cols[colNum + 2]);
-          if (v != null) {
-            game.setVp(p, Integer.parseInt(v));
+          if (cols[colNum + 2] != null) {
+            game.setVp(p, Integer.parseInt(cols[colNum + 2]));
           }
           if (!game.isFinished() && cols.length > colNum + 3) {
-            v = StringUtils.stripToNull(cols[colNum + 3]);
-            if (v != null) {
-              game.setUnusedWorkers(p, Integer.parseInt(v));
+            if (cols[colNum + 3] != null) {
+              game.setUnusedWorkers(p, Integer.parseInt(cols[colNum + 3]));
             }
           }
         }
