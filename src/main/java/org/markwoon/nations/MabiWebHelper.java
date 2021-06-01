@@ -238,34 +238,38 @@ public class MabiWebHelper {
         game.setActivePlayer(playerMatcher.group(1));
       }
 
-      // score
-      Matcher vpTableMatcher = sf_vpTablePattern.matcher(doc.html());
-      if (vpTableMatcher.find()) {
-        String vpTable = vpTableMatcher.group(1);
-        Matcher vpMatcher = sf_vpPattern.matcher(vpTable);
-        while (vpMatcher.find()) {
-          game.setVp(vpMatcher.group(1), Integer.parseInt(vpMatcher.group(2)));
+      if (!game.isSettingUp()) {
+        // score
+        Matcher vpTableMatcher = sf_vpTablePattern.matcher(doc.html());
+        if (vpTableMatcher.find()) {
+          String vpTable = vpTableMatcher.group(1);
+          Matcher vpMatcher = sf_vpPattern.matcher(vpTable);
+          while (vpMatcher.find()) {
+            game.setVp(vpMatcher.group(1), Integer.parseInt(vpMatcher.group(2)));
+          }
         }
       }
     }
 
-    // country
-    for (String player : game.getPlayers()) {
-      Element board = doc.getElementById(player);
-      Matcher countryMatcher = sf_countryPattern.matcher(board.html());
-      if (countryMatcher.find()) {
-        game.setCountry(player, countryMatcher.group(1));
-      }
+    if (!game.isSettingUp()) {
+      // country
+      for (String player : game.getPlayers()) {
+        Element board = doc.getElementById(player);
+        Matcher countryMatcher = sf_countryPattern.matcher(board.html());
+        if (countryMatcher.find()) {
+          game.setCountry(player, countryMatcher.group(1));
+        }
 
-      if (!isFinished) {
-        Elements elems = board.select("div.outline_text");
-        for (Element elem : elems) {
-          Node prev = elem.previousSibling();
-          if (prev.attr("src").contains("/images/Meeple_")) {
-            Matcher topMatcher = sf_topPattern.matcher(elem.attr("style"));
-            if (topMatcher.find()) {
-              if (Integer.parseInt(topMatcher.group(1)) > 400) {
-                game.setUnusedWorkers(player, Integer.parseInt(elem.text()));
+        if (!isFinished) {
+          Elements elems = board.select("div.outline_text");
+          for (Element elem : elems) {
+            Node prev = elem.previousSibling();
+            if (prev.attr("src").contains("/images/Meeple_")) {
+              Matcher topMatcher = sf_topPattern.matcher(elem.attr("style"));
+              if (topMatcher.find()) {
+                if (Integer.parseInt(topMatcher.group(1)) > 400) {
+                  game.setUnusedWorkers(player, Integer.parseInt(elem.text()));
+                }
               }
             }
           }

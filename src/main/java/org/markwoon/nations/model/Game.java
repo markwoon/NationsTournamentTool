@@ -23,6 +23,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Mark Woon
  */
 public class Game {
+  public static final String ROUND_SETUP = "setup";
   public static final String ROUND_FINISHED = "finished";
   public static final String ROUND_DEAD = "dead";
   private static final Pattern sf_gameGroupPattern = Pattern.compile("- Group ([A-Za-z]+) -");
@@ -79,7 +80,7 @@ public class Game {
 
   public void setRoundString(String roundString) {
     if ("Setup phase".equalsIgnoreCase(roundString)) {
-      m_round = "0";
+      m_round = ROUND_SETUP;
       return;
     }
     Matcher m = sf_roundPattern.matcher(roundString);
@@ -92,6 +93,11 @@ public class Game {
       case "III" -> m_round = "3" + m.group(2);
       case "II II" -> m_round = "4" + m.group(2);
     }
+  }
+
+
+  public boolean isSettingUp() {
+    return ROUND_SETUP.equals(m_round);
   }
 
   public boolean isFinished() {
@@ -260,7 +266,7 @@ public class Game {
     // find games with current players
     Multimap<String, Game> playerGames = HashMultimap.create();
     for (Game game : games) {
-      if (game.isDead()) {
+      if (game.isSettingUp() || game.isDead()) {
         continue;
       }
       for (String p : m_players) {
