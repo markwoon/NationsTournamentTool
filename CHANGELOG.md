@@ -1,3 +1,10 @@
+### [1.3.5](https://github.com/markwoon/NationsTournamentTool/compare/v1.3.4...v1.3.5) (2021-06-01)
+
+
+### Bug Fixes
+
+* handle setup phase ([0615746](https://github.com/markwoon/NationsTournamentTool/commit/061574621d6b4916cbe649105a877fe3f5777164))
+
 ### [1.3.4](https://github.com/markwoon/NationsTournamentTool/compare/v1.3.3...v1.3.4) (2021-05-12)
 
 
