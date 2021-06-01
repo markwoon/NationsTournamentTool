@@ -78,6 +78,10 @@ public class Game {
   }
 
   public void setRoundString(String roundString) {
+    if ("Setup phase".equalsIgnoreCase(roundString)) {
+      m_round = "0";
+      return;
+    }
     Matcher m = sf_roundPattern.matcher(roundString);
     if (!m.find()) {
       throw new IllegalArgumentException("Unexpected round format: " + roundString);
