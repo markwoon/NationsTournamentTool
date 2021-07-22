@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.prefs.Preferences;
-import javafx.beans.value.ChangeListener;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -38,7 +37,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.markwoon.nations.model.Game;
 import org.markwoon.nations.ui.GroupField;
 import org.markwoon.nations.ui.IntField;
-import org.markwoon.nations.ui.SubGroupField;
 
 
 public class Controller  {
@@ -67,9 +65,7 @@ public class Controller  {
   @FXML
   private GroupField tournamentGroupInput;
   @FXML
-  private SubGroupField tournamentSubgroupInput;
-  @FXML
-  private TextField tournamentMatchPrefix;
+  private ChoiceBox<Integer> tournamentPlayersInput;
   @FXML
   private TextField userIdInput;
   @FXML
@@ -94,7 +90,7 @@ public class Controller  {
 
     m_controls.add(tournamentNumberInput);
     m_controls.add(tournamentGroupInput);
-    m_controls.add(tournamentSubgroupInput);
+    m_controls.add(tournamentPlayersInput);
     m_controls.add(userIdInput);
     m_controls.add(passwordInput);
     m_controls.add(createGamesBtn);
@@ -115,18 +111,7 @@ public class Controller  {
     String filename = prefs.get(PREFS_GAME_LIST_FILE, "");
     fileInput.setText(filename);
 
-    tournamentMatchPrefix.setDisable(true);
-    ChangeListener<String> listener = (observable, oldValue, newValue) -> {
-      String groupPrefix = tournamentNumberInput.getValue() + ".Small Tournament - Group " +
-          tournamentGroupInput.getValue();
-      if (tournamentSubgroupInput.getValue() > 0) {
-        groupPrefix += tournamentSubgroupInput.getValue();
-      }
-      tournamentMatchPrefix.setText(groupPrefix);
-    };
-    tournamentNumberInput.textProperty().addListener(listener);
-    tournamentGroupInput.textProperty().addListener(listener);
-    tournamentSubgroupInput.textProperty().addListener(listener);
+    tournamentPlayersInput.setValue(9);
   }
 
 
@@ -308,7 +293,6 @@ public class Controller  {
 
     String tournamentNum = StringUtils.stripToNull(tournamentNumberInput.getText());
     String group = StringUtils.stripToNull(tournamentGroupInput.getText());
-    String subgroupString = StringUtils.stripToNull(tournamentSubgroupInput.getText());
     String userId = StringUtils.stripToNull(userIdInput.getText());
     String password = StringUtils.stripToNull(passwordInput.getText());
 
@@ -317,25 +301,11 @@ public class Controller  {
           "fields are required.");
       return;
     }
-    int subgroup = 0;
-    if (subgroupString != null) {
-      try {
-        subgroup = Integer.parseInt(subgroupString);
-      } catch (NumberFormatException ex) {
-        alert(AlertType.ERROR, "Subgroup '" + subgroupString + "' is not a valid number.");
-      }
-      if (subgroup < 0) {
-        alert(AlertType.ERROR, "No negative subgroups.");
-      }
-      if (subgroup > 8) {
-        alert(AlertType.ERROR, "Maximum of 8 subgroups.");
-      }
-    }
-
+    int numPlayers = tournamentPlayersInput.getValue();
     try {
       String prefix = tournamentNum + ".Small Tournament";
       List<MabiWebHelper.NewGame> games =
-          MabiWebHelper.buildTournamentGameList(prefix, group, subgroup);
+          MabiWebHelper.buildTournamentGroupGameList(prefix, group, numPlayers);
       StringBuilder builder = new StringBuilder();
       for (MabiWebHelper.NewGame game : games) {
         builder.append(game.toString())

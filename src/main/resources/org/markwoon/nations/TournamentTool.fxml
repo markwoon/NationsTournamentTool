@@ -1,9 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?><?import javafx.geometry.Insets?>
+<?xml version="1.0" encoding="UTF-8"?>
+<?import java.lang.Integer?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import org.markwoon.nations.ui.GroupField?>
-<?import org.markwoon.nations.ui.IntField?>
-<?import org.markwoon.nations.ui.SubGroupField?><AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="320.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.markwoon.nations.Controller">
+<?import org.markwoon.nations.ui.IntField?><AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+    prefHeight="320.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1"
+    xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.markwoon.nations.Controller">
   <StackPane>
     <TabPane prefHeight="320.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
       <tabs>
@@ -116,17 +120,22 @@
                 <Label text="an upper case letter"
                     GridPane.rowIndex="1" GridPane.columnIndex="2" />
 
-                <Label text="Tournament Subgroup:"
+                <Label text="Number of Players:"
                     GridPane.rowIndex="2" GridPane.columnIndex="0" />
-                <SubGroupField fx:id="tournamentSubgroupInput"
-                    GridPane.rowIndex="2" GridPane.columnIndex="1" />
-                <Label text="optional number (0-8)"
-                    GridPane.rowIndex="2" GridPane.columnIndex="2" />
-
-                <Label text="Match prefix:"
-                    GridPane.rowIndex="3" GridPane.columnIndex="0" />
-                <TextField fx:id="tournamentMatchPrefix"
-                    GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                <ChoiceBox fx:id="tournamentPlayersInput"
+                    GridPane.rowIndex="2" GridPane.columnIndex="1">
+                  <items>
+                    <FXCollections fx:factory="observableArrayList">
+                      <Integer fx:value="9" />
+                      <Integer fx:value="12" />
+                      <Integer fx:value="15" />
+                      <Integer fx:value="18" />
+                      <Integer fx:value="21" />
+                      <Integer fx:value="24" />
+                      <Integer fx:value="27" />
+                    </FXCollections>
+                  </items>
+                </ChoiceBox>
 
                 <Label
                     GridPane.rowIndex="4" GridPane.columnIndex="0" />

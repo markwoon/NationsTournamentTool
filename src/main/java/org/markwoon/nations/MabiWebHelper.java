@@ -383,7 +383,64 @@ public class MabiWebHelper {
   }
 
 
-  public static List<NewGame> buildTournamentGameList(String prefix, String group, int subgroup) {
+
+  public static List<NewGame> buildTournamentGroupGameList(String prefix, String group,
+      int numPlayers) {
+    prefix = StringUtils.stripToNull(prefix);
+    Preconditions.checkNotNull(prefix);
+    group = StringUtils.stripToNull(group);
+    Preconditions.checkNotNull(group);
+    Preconditions.checkArgument(group.length() == 1);
+
+    int subgroups = 1;
+    int gamesPerSubgroup = 12;
+    switch (numPlayers) {
+      case 9 -> {
+        subgroups = 1;
+        gamesPerSubgroup = 12;
+      }
+      case 12 -> {
+        subgroups = 1;
+        gamesPerSubgroup = 16;
+      }
+      case 15 -> {
+        subgroups = 1;
+        gamesPerSubgroup = 20;
+      }
+      case 18 -> {
+        subgroups = 2;
+        gamesPerSubgroup = 12;
+      }
+      case 21 -> {
+        subgroups = 1;
+        gamesPerSubgroup = 28;
+      }
+      case 24 -> {
+        subgroups = 2;
+        gamesPerSubgroup = 16;
+      }
+      case 27 -> {
+        subgroups = 3;
+        gamesPerSubgroup = 12;
+      }
+      default -> throw new UnsupportedOperationException("Cannot have a group with " + numPlayers +
+          " players");
+    }
+
+    if (subgroups == 1) {
+      return buildTournamentGameList(prefix, group, 0, gamesPerSubgroup);
+    }
+    List<NewGame> games = new ArrayList<>();
+    for (int x = 0; x < subgroups; x += 1) {
+      games.addAll(buildTournamentGameList(prefix, group, x + 1, gamesPerSubgroup));
+    }
+    return games;
+  }
+
+
+
+  public static List<NewGame> buildTournamentGameList(String prefix, String group, int subgroup,
+      int numGames) {
     prefix = StringUtils.stripToNull(prefix);
     Preconditions.checkNotNull(prefix);
     group = StringUtils.stripToNull(group);
@@ -397,15 +454,16 @@ public class MabiWebHelper {
     int subMod = 0;
     if (subgroup > 0) {
       groupName += subgroup;
-      subMod = (subgroup - 1) * 12;
+      subMod = (subgroup - 1) * numGames;
     }
-    for (int gameNum = 1; gameNum <= 12; gameNum += 1) {
+    int gamesPerLevel = numGames / 4;
+    for (int gameNum = 1; gameNum <= numGames; gameNum += 1) {
       Level level = Level.CHIEFTAIN;
-      if (gameNum <= 3) {
+      if (gameNum <= gamesPerLevel) {
         level = Level.EMPEROR;
-      } else if (gameNum <= 6) {
+      } else if (gameNum <= 2*gamesPerLevel) {
         level = Level.KING;
-      } else if (gameNum <= 9) {
+      } else if (gameNum <= 3*gamesPerLevel) {
         level = Level.PRINCE;
       }
       String gameId = groupNum + String.format("%02d", gameNum + subMod);
