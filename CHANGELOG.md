@@ -1,3 +1,10 @@
+## [1.4.0](https://github.com/markwoon/NationsTournamentTool/compare/v1.3.6...v1.4.0) (2021-07-22)
+
+
+### Features
+
+* switch to creating games depending on number of players ([bc8de59](https://github.com/markwoon/NationsTournamentTool/commit/bc8de59297f5639a8fa020681be31dc5c597eb31))
+
 ### [1.3.6](https://github.com/markwoon/NationsTournamentTool/compare/v1.3.5...v1.3.6) (2021-06-01)
 
 
