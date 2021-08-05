@@ -26,7 +26,7 @@ public class Game {
   public static final String ROUND_SETUP = "setup";
   public static final String ROUND_FINISHED = "finished";
   public static final String ROUND_DEAD = "dead";
-  private static final Pattern sf_gameGroupPattern = Pattern.compile("- Group ([A-Za-z]+) -");
+  private static final Pattern sf_gameGroupPattern = Pattern.compile("- Group ([A-Za-z0-9]+) -");
   private static final Pattern sf_roundPattern = Pattern.compile("\\w+ \\((.*)\\) - ([AB])");
   private final String m_id;
   private final String m_name;
