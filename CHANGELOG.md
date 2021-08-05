@@ -1,3 +1,10 @@
+### [1.4.1](https://github.com/markwoon/NationsTournamentTool/compare/v1.4.0...v1.4.1) (2021-08-05)
+
+
+### Bug Fixes
+
+* fix game group pattern ([2d7c19a](https://github.com/markwoon/NationsTournamentTool/commit/2d7c19ac6da568ea4e9b8a3062ad90d5d12af468))
+
 ## [1.4.0](https://github.com/markwoon/NationsTournamentTool/compare/v1.3.6...v1.4.0) (2021-07-22)
 
 
