@@ -69,32 +69,32 @@ class MabiWebHelperTest {
   @Test
   void buildSubgroupGameListWith21Players() {
     List<MabiWebHelper.NewGame> games =
-        MabiWebHelper.buildTournamentGroupGameList("foo", "A", 9);
+        MabiWebHelper.buildTournamentGroup3pGameList("foo", "A", 9);
     assertEquals(12, games.size());
     assertEquals("foo - Group A - Game 101", games.get(0).name);
 
-    games = MabiWebHelper.buildTournamentGroupGameList("foo", "A", 12);
+    games = MabiWebHelper.buildTournamentGroup3pGameList("foo", "A", 12);
     assertEquals(16, games.size());
     assertEquals("foo - Group A - Game 101", games.get(0).name);
 
-    games = MabiWebHelper.buildTournamentGroupGameList("foo", "A", 15);
+    games = MabiWebHelper.buildTournamentGroup3pGameList("foo", "A", 15);
     assertEquals(20, games.size());
     assertEquals("foo - Group A - Game 101", games.get(0).name);
 
-    games = MabiWebHelper.buildTournamentGroupGameList("foo", "A", 18);
+    games = MabiWebHelper.buildTournamentGroup3pGameList("foo", "A", 18);
     assertEquals(24, games.size());
     assertEquals("foo - Group A1 - Game 101", games.get(0).name);
 
-    games = MabiWebHelper.buildTournamentGroupGameList("foo", "A", 21);
+    games = MabiWebHelper.buildTournamentGroup3pGameList("foo", "A", 21);
     assertEquals(28, games.size());
     assertEquals("foo - Group A - Game 101", games.get(0).name);
 
-    games = MabiWebHelper.buildTournamentGroupGameList("foo", "A", 24);
+    games = MabiWebHelper.buildTournamentGroup3pGameList("foo", "A", 24);
     assertEquals(32, games.size());
     assertEquals("foo - Group A1 - Game 101", games.get(0).name);
     assertEquals("foo - Group A2 - Game 117", games.get(16).name);
 
-    games = MabiWebHelper.buildTournamentGroupGameList("foo", "A", 27);
+    games = MabiWebHelper.buildTournamentGroup3pGameList("foo", "A", 27);
     assertEquals(36, games.size());
     assertEquals("foo - Group A1 - Game 101", games.get(0).name);
     assertEquals("foo - Group A3 - Game 136", games.get(35).name);

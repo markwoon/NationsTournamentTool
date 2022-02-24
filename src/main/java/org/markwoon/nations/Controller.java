@@ -61,17 +61,30 @@ public class Controller  {
   private Button dlGameInfoBtn;
 
   @FXML
-  private IntField tournamentNumberInput;
+  private IntField p3TournamentNumberInput;
   @FXML
-  private GroupField tournamentGroupInput;
+  private GroupField p3TournamentGroupInput;
   @FXML
-  private ChoiceBox<Integer> tournamentPlayersInput;
+  private ChoiceBox<Integer> p3TournamentPlayersInput;
   @FXML
-  private TextField userIdInput;
+  private TextField p3UserIdInput;
   @FXML
-  private TextField passwordInput;
+  private TextField p3PasswordInput;
   @FXML
-  private Button createGamesBtn;
+  private Button p3CreateGamesBtn;
+
+  @FXML
+  private IntField p4TournamentNumberInput;
+  @FXML
+  private IntField p4TournamentDivisionInput;
+  @FXML
+  private ChoiceBox<String> p4TournamentGroupInput;
+  @FXML
+  private TextField p4UserIdInput;
+  @FXML
+  private TextField p4PasswordInput;
+  @FXML
+  private Button p4CreateGamesBtn;
 
   @FXML
   private VBox loading;
@@ -88,13 +101,19 @@ public class Controller  {
     m_controls.add(scoreMode);
     m_controls.add(dlGameInfoBtn);
 
-    m_controls.add(tournamentNumberInput);
-    m_controls.add(tournamentGroupInput);
-    m_controls.add(tournamentPlayersInput);
-    m_controls.add(userIdInput);
-    m_controls.add(passwordInput);
-    m_controls.add(createGamesBtn);
+    m_controls.add(p3TournamentNumberInput);
+    m_controls.add(p3TournamentGroupInput);
+    m_controls.add(p3TournamentPlayersInput);
+    m_controls.add(p3UserIdInput);
+    m_controls.add(p3PasswordInput);
+    m_controls.add(p3CreateGamesBtn);
 
+    m_controls.add(p4TournamentNumberInput);
+    m_controls.add(p4TournamentDivisionInput);
+    m_controls.add(p4TournamentGroupInput);
+    m_controls.add(p4UserIdInput);
+    m_controls.add(p4PasswordInput);
+    m_controls.add(p4CreateGamesBtn);
 
     Preferences prefs = Preferences.userRoot().node(this.getClass().getName());
 
@@ -111,7 +130,8 @@ public class Controller  {
     String filename = prefs.get(PREFS_GAME_LIST_FILE, "");
     fileInput.setText(filename);
 
-    tournamentPlayersInput.setValue(9);
+    p3TournamentPlayersInput.setValue(9);
+    p4TournamentGroupInput.setValue("A");
   }
 
 
@@ -289,23 +309,100 @@ public class Controller  {
 
 
   @FXML
-  public void createGames(@SuppressWarnings("unused") ActionEvent event) {
+  public void create3PGames(@SuppressWarnings("unused") ActionEvent event) {
 
-    String tournamentNum = StringUtils.stripToNull(tournamentNumberInput.getText());
-    String group = StringUtils.stripToNull(tournamentGroupInput.getText());
-    String userId = StringUtils.stripToNull(userIdInput.getText());
-    String password = StringUtils.stripToNull(passwordInput.getText());
+    String tournamentNum = StringUtils.stripToNull(p3TournamentNumberInput.getText());
+    String group = StringUtils.stripToNull(p3TournamentGroupInput.getText());
+    String userId = StringUtils.stripToNull(p3UserIdInput.getText());
+    String password = StringUtils.stripToNull(p3PasswordInput.getText());
 
     if (tournamentNum == null || group == null || userId == null || password == null) {
       alert(AlertType.ERROR, "Tournament Number, Tournament Group, User ID and Password " +
           "fields are required.");
       return;
     }
-    int numPlayers = tournamentPlayersInput.getValue();
+    int numPlayers = p3TournamentPlayersInput.getValue();
     try {
       String prefix = tournamentNum + ".Small Tournament";
       List<MabiWebHelper.NewGame> games =
-          MabiWebHelper.buildTournamentGroupGameList(prefix, group, numPlayers);
+          MabiWebHelper.buildTournamentGroup3pGameList(prefix, group, numPlayers);
+      StringBuilder builder = new StringBuilder();
+      for (MabiWebHelper.NewGame game : games) {
+        builder.append(game.toString())
+            .append("\n");
+      }
+      builder.append("\n");
+      if (!confirm("Create the following games?", builder.toString())) {
+        return;
+      }
+
+      lockInputs();
+      Task<Integer> task = new Task<>() {
+        @Override
+        protected Integer call() throws Exception {
+          MabiWebHelper mabiWebHelper = new MabiWebHelper();
+          if (!mabiWebHelper.login(userId, password)) {
+            System.out.println("Failed to login");
+            return 1;
+          }
+          for (MabiWebHelper.NewGame game : games) {
+            mabiWebHelper.createGame(game.name, game.password, 3, game.level);
+          }
+          return 0;
+        }
+      };
+      task.setOnSucceeded(evt -> {
+        if ((Integer)evt.getSource().getValue() == 1) {
+          alert(AlertType.WARNING, "Failed to login to MabiWeb.");
+        } else {
+          alert(AlertType.INFORMATION, "Games created!");
+        }
+        reenableInputs();
+      });
+      task.setOnFailed(evt -> {
+        alertException(task.getException());
+        reenableInputs();
+      });
+      new Thread(task).start();
+
+    } catch (Exception ex) {
+      alertException(ex);
+    }
+  }
+
+
+  @FXML
+  public void create4PGames(@SuppressWarnings("unused") ActionEvent event) {
+
+    String tournamentNum = StringUtils.stripToNull(p4TournamentNumberInput.getText());
+    String divisionNum = StringUtils.stripToNull(p4TournamentDivisionInput.getText());
+    String group = StringUtils.stripToNull(p4TournamentGroupInput.getValue());
+    String userId = StringUtils.stripToNull(p4UserIdInput.getText());
+    String password = StringUtils.stripToNull(p4PasswordInput.getText());
+
+    if (tournamentNum == null || divisionNum == null || group == null || userId == null ||
+        password == null) {
+      alert(AlertType.ERROR, "Tournament Number, Division, Group, User ID and Password " +
+          "fields are required.");
+      return;
+    }
+    int division = Integer.parseInt(divisionNum);
+    if (division < 1 || division > 4) {
+      alert(AlertType.ERROR, "Division must be between 1 and 4 inclusive");
+      return;
+    }
+    MabiWebHelper.Level level = null;
+    switch (division) {
+      case 1 -> level = MabiWebHelper.Level.EMPEROR;
+      case 2 -> level = MabiWebHelper.Level.KING;
+      case 3 -> level = MabiWebHelper.Level.PRINCE;
+      case 4 -> level = MabiWebHelper.Level.CHIEFTAIN;
+    }
+    try {
+      // 4-Player-Tournament - Div.(variable as above) - Group (variable as above) - Game No.
+      String prefix = "4-Player-Tournament-" + tournamentNum + " - Div." + divisionNum;
+      List<MabiWebHelper.NewGame> games =
+          MabiWebHelper.buildTournamentGroup4pGameList(prefix, group, level);
       StringBuilder builder = new StringBuilder();
       for (MabiWebHelper.NewGame game : games) {
         builder.append(game.toString())
