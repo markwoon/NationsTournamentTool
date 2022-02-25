@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?import java.lang.*?>
+<?xml version="1.0" encoding="UTF-8"?><?import java.lang.*?>
 <?import javafx.collections.FXCollections?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
@@ -185,10 +184,18 @@
 
                 <Label text="Division:"
                     GridPane.rowIndex="1" GridPane.columnIndex="0" />
-                <IntField fx:id="p4TournamentDivisionInput"
-                    GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                <Label text="a number"
-                    GridPane.rowIndex="1" GridPane.columnIndex="2" />
+                <ChoiceBox fx:id="p4TournamentDivisionInput"
+                    GridPane.rowIndex="1" GridPane.columnIndex="1">
+                  <items>
+                    <FXCollections fx:factory="observableArrayList">
+                      <Integer fx:value="1" />
+                      <Integer fx:value="2" />
+                      <Integer fx:value="3" />
+                      <Integer fx:value="4" />
+                    </FXCollections>
+                  </items>
+                </ChoiceBox>
+
 
                 <Label text="Group:"
                     GridPane.rowIndex="2" GridPane.columnIndex="0" />
@@ -200,6 +207,20 @@
                       <String fx:value="B" />
                       <String fx:value="C" />
                       <String fx:value="D" />
+                    </FXCollections>
+                  </items>
+                </ChoiceBox>
+
+                <Label text="Level:"
+                    GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                <ChoiceBox fx:id="p4TournamentLevelInput"
+                    GridPane.rowIndex="3" GridPane.columnIndex="1">
+                  <items>
+                    <FXCollections fx:factory="observableArrayList">
+                      <String fx:value="Emperor" />
+                      <String fx:value="King" />
+                      <String fx:value="Prince" />
+                      <String fx:value="Chieftain" />
                     </FXCollections>
                   </items>
                 </ChoiceBox>

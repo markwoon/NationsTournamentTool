@@ -76,9 +76,11 @@ public class Controller  {
   @FXML
   private IntField p4TournamentNumberInput;
   @FXML
-  private IntField p4TournamentDivisionInput;
+  private ChoiceBox<Integer> p4TournamentDivisionInput;
   @FXML
   private ChoiceBox<String> p4TournamentGroupInput;
+  @FXML
+  private ChoiceBox<String> p4TournamentLevelInput;
   @FXML
   private TextField p4UserIdInput;
   @FXML
@@ -111,6 +113,7 @@ public class Controller  {
     m_controls.add(p4TournamentNumberInput);
     m_controls.add(p4TournamentDivisionInput);
     m_controls.add(p4TournamentGroupInput);
+    m_controls.add(p4TournamentLevelInput);
     m_controls.add(p4UserIdInput);
     m_controls.add(p4PasswordInput);
     m_controls.add(p4CreateGamesBtn);
@@ -131,7 +134,10 @@ public class Controller  {
     fileInput.setText(filename);
 
     p3TournamentPlayersInput.setValue(9);
+
+    p4TournamentDivisionInput.setValue(1);
     p4TournamentGroupInput.setValue("A");
+    p4TournamentLevelInput.setValue("Emperor");
   }
 
 
@@ -375,32 +381,28 @@ public class Controller  {
   public void create4PGames(@SuppressWarnings("unused") ActionEvent event) {
 
     String tournamentNum = StringUtils.stripToNull(p4TournamentNumberInput.getText());
-    String divisionNum = StringUtils.stripToNull(p4TournamentDivisionInput.getText());
     String group = StringUtils.stripToNull(p4TournamentGroupInput.getValue());
+    String levelValue = StringUtils.stripToNull(p4TournamentLevelInput.getValue());
     String userId = StringUtils.stripToNull(p4UserIdInput.getText());
     String password = StringUtils.stripToNull(p4PasswordInput.getText());
 
-    if (tournamentNum == null || divisionNum == null || group == null || userId == null ||
+    if (tournamentNum == null || group == null || levelValue == null || userId == null ||
         password == null) {
-      alert(AlertType.ERROR, "Tournament Number, Division, Group, User ID and Password " +
-          "fields are required.");
+      alert(AlertType.ERROR, "Tournament Number, Group, Level, User ID and Password fields " +
+          "are required.");
       return;
     }
-    int division = Integer.parseInt(divisionNum);
-    if (division < 1 || division > 4) {
-      alert(AlertType.ERROR, "Division must be between 1 and 4 inclusive");
+    MabiWebHelper.Level level;
+    try {
+      level = MabiWebHelper.Level.valueOf(levelValue.toUpperCase());
+    } catch (IllegalArgumentException ex) {
+      alert(AlertType.ERROR, "Unknown leve '" + levelValue  +"'");
       return;
-    }
-    MabiWebHelper.Level level = null;
-    switch (division) {
-      case 1 -> level = MabiWebHelper.Level.EMPEROR;
-      case 2 -> level = MabiWebHelper.Level.KING;
-      case 3 -> level = MabiWebHelper.Level.PRINCE;
-      case 4 -> level = MabiWebHelper.Level.CHIEFTAIN;
     }
     try {
       // 4-Player-Tournament - Div.(variable as above) - Group (variable as above) - Game No.
-      String prefix = "4-Player-Tournament-" + tournamentNum + " - Div." + divisionNum;
+      int division = p4TournamentDivisionInput.getValue();
+      String prefix = "4-Player-Tournament-" + tournamentNum + " - Div." + division;
       List<MabiWebHelper.NewGame> games =
           MabiWebHelper.buildTournamentGroup4pGameList(prefix, group, level);
       StringBuilder builder = new StringBuilder();
