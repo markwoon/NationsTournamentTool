@@ -1,3 +1,19 @@
+## [2.0.0](https://github.com/markwoon/NationsTournamentTool/compare/v1.4.1...v2.0.0) (2022-02-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* require Java 17
+
+### Features
+
+* support creating 4p games ([e859430](https://github.com/markwoon/NationsTournamentTool/commit/e85943083d10adac0d9d28f469764918e8bda67a))
+
+
+### Miscellaneous Chores
+
+* upgrade to Java 17 ([2149af9](https://github.com/markwoon/NationsTournamentTool/commit/2149af9bf44b106f8129e6ab4faa08dd228d1189))
+
 ### [1.4.1](https://github.com/markwoon/NationsTournamentTool/compare/v1.4.0...v1.4.1) (2021-08-05)
 
 
