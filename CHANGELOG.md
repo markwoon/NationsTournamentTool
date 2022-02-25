@@ -1,3 +1,10 @@
+### [2.0.1](https://github.com/markwoon/NationsTournamentTool/compare/v2.0.0...v2.0.1) (2022-02-25)
+
+
+### Bug Fixes
+
+* support specifying level when creating 4P games ([a98d129](https://github.com/markwoon/NationsTournamentTool/commit/a98d1294b73799036e82cb25a308f8f448ff74e3))
+
 ## [2.0.0](https://github.com/markwoon/NationsTournamentTool/compare/v1.4.1...v2.0.0) (2022-02-25)
 
 
