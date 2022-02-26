@@ -437,21 +437,21 @@ public class MabiWebHelper {
     return games;
   }
 
-  public static List<NewGame> buildTournamentGroup4pGameList(String prefix, String group,
-      Level level) {
+  public static List<NewGame> buildTournamentGroup4pGameList(String prefix, int division,
+      String group, Level level) {
     prefix = StringUtils.stripToNull(prefix);
     Preconditions.checkNotNull(prefix);
     group = StringUtils.stripToNull(group);
     Preconditions.checkNotNull(group);
     Preconditions.checkArgument(group.length() == 1);
 
-    String groupName = prefix + " - Group " + group.toUpperCase();
     int groupNum = group.toUpperCase().charAt(0) - 'A' + 1;
 
     List<NewGame> games = new ArrayList<>();
-    for (int gameNum = 1; gameNum <= 20; gameNum += 1) {
-      String gameId = groupNum + String.format("%02d", gameNum);
-      games.add(new NewGame(groupName + " - Game " + gameId, gameId, level));
+    for (int gameNum = (groupNum - 1) * 20 + 1, numGames = 0; numGames < 20;
+         gameNum += 1, numGames += 1) {
+      String gameId = division + String.format("%02d", gameNum);
+      games.add(new NewGame(prefix + " - Game " + gameId, gameId, level));
     }
     return games;
   }

@@ -402,9 +402,10 @@ public class Controller  {
     try {
       // 4-Player-Tournament - Div.(variable as above) - Group (variable as above) - Game No.
       int division = p4TournamentDivisionInput.getValue();
-      String prefix = "4-Player-Tournament-" + tournamentNum + " - Div." + division;
+      String prefix = "4-Player-Tournament-" + tournamentNum + " - Div." + division + " - Group " +
+          group.toUpperCase();
       List<MabiWebHelper.NewGame> games =
-          MabiWebHelper.buildTournamentGroup4pGameList(prefix, group, level);
+          MabiWebHelper.buildTournamentGroup4pGameList(prefix, division, group, level);
       StringBuilder builder = new StringBuilder();
       for (MabiWebHelper.NewGame game : games) {
         builder.append(game.toString())
@@ -425,7 +426,7 @@ public class Controller  {
             return 1;
           }
           for (MabiWebHelper.NewGame game : games) {
-            mabiWebHelper.createGame(game.name, game.password, 3, game.level);
+            mabiWebHelper.createGame(game.name, game.password, 4, game.level);
           }
           return 0;
         }
