@@ -1,3 +1,11 @@
+### [2.0.2](https://github.com/markwoon/NationsTournamentTool/compare/v2.0.1...v2.0.2) (2022-02-26)
+
+
+### Bug Fixes
+
+* create test 4p games for now ([e36b76c](https://github.com/markwoon/NationsTournamentTool/commit/e36b76cd254be8becec89807e588c89e531a170e))
+* fix 4P game creation ([cce9bee](https://github.com/markwoon/NationsTournamentTool/commit/cce9bee0087f91cc4c83472cc693d8124e4ca5fd))
+
 ### [2.0.1](https://github.com/markwoon/NationsTournamentTool/compare/v2.0.0...v2.0.1) (2022-02-25)
 
 
