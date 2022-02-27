@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -179,9 +180,9 @@ public class MabiWebHelper {
       return false;
     }
 
-    Element header = doc.getElementById("nations-gameheader");
+    Element header = Objects.requireNonNull(doc.getElementById("nations-gameheader"));
     String headerPlayerInfo = header.text().substring(header.text().indexOf("Players:") + 8);
-    Element lastActions = doc.getElementById("last_actions");
+    Element lastActions = Objects.requireNonNull(doc.getElementById("last_actions"));
 
     boolean isFinished = header.html().contains("Game finished");
     // finished?
@@ -254,7 +255,7 @@ public class MabiWebHelper {
     if (!game.isSettingUp()) {
       // country
       for (String player : game.getPlayers()) {
-        Element board = doc.getElementById(player);
+        Element board = Objects.requireNonNull(doc.getElementById(player));
         Matcher countryMatcher = sf_countryPattern.matcher(board.html());
         if (countryMatcher.find()) {
           game.setCountry(player, countryMatcher.group(1));
@@ -263,7 +264,7 @@ public class MabiWebHelper {
         if (!isFinished) {
           Elements elems = board.select("div.outline_text");
           for (Element elem : elems) {
-            Node prev = elem.previousSibling();
+            Node prev = Objects.requireNonNull(elem.previousSibling());
             if (prev.attr("src").contains("/images/Meeple_")) {
               Matcher topMatcher = sf_topPattern.matcher(elem.attr("style"));
               if (topMatcher.find()) {
@@ -392,8 +393,8 @@ public class MabiWebHelper {
     Preconditions.checkNotNull(group);
     Preconditions.checkArgument(group.length() == 1);
 
-    int subgroups = 1;
-    int gamesPerSubgroup = 12;
+    int subgroups;
+    int gamesPerSubgroup;
     switch (numPlayers) {
       case 9 -> {
         subgroups = 1;
