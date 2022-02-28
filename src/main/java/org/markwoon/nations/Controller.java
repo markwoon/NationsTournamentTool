@@ -402,7 +402,7 @@ public class Controller  {
     try {
       // 4-Player-Tournament - Div.(variable as above) - Group (variable as above) - Game No.
       int division = p4TournamentDivisionInput.getValue();
-      String prefix = "Test-4-Player-Tournament-" + tournamentNum + " - Div." + division + " - Group " +
+      String prefix = "4-Player-Tournament-" + tournamentNum + " - Div." + division + " - Group " +
           group.toUpperCase();
       List<MabiWebHelper.NewGame> games =
           MabiWebHelper.buildTournamentGroup4pGameList(prefix, division, group, level);
