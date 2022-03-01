@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.prefs.Preferences;
+import jakarta.mail.AuthenticationFailedException;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -43,6 +44,10 @@ public class Controller  {
   private static final String PREFS_TOURNAMENT_PREFIX = "tournamentPrefix";
   private static final String PREFS_WORKING_DIR = "workingDir";
   private static final String PREFS_GAME_LIST_FILE = "file.gameList";
+  private static final String PREFS_3P_USERID = "3p.userId";
+  private static final String PREFS_4P_USERID = "4p.userId";
+  private static final String PREFS_INVITE_FILE = "invite.file";
+  private static final String PREFS_INVITE_USERID = "invite.userId";
   private static final String PREFS_SCORE_MODE = "scoreMode";
   private static final String NORMAL_SCORE_MODE_VALUE = "Normal";
   private static final String FINAL_SCORE_MODE_VALUE = "Final";
@@ -89,6 +94,21 @@ public class Controller  {
   private Button p4CreateGamesBtn;
 
   @FXML
+  private TextField inviteTournamentNameInput;
+  @FXML
+  private TextField inviteTournamentPrefixInput;
+  @FXML
+  private TextField inviteTournamentSiteInput;
+  @FXML
+  private TextField inviteFileInput;
+  @FXML
+  private TextField inviteUserIdInput;
+  @FXML
+  private TextField invitePasswordInput;
+  @FXML
+  private Button inviteBtn;
+
+  @FXML
   private VBox loading;
 
   private final List<Control> m_controls = new ArrayList<>();
@@ -118,6 +138,14 @@ public class Controller  {
     m_controls.add(p4PasswordInput);
     m_controls.add(p4CreateGamesBtn);
 
+    m_controls.add(inviteTournamentNameInput);
+    m_controls.add(inviteTournamentPrefixInput);
+    m_controls.add(inviteTournamentSiteInput);
+    m_controls.add(inviteFileInput);
+    m_controls.add(inviteUserIdInput);
+    m_controls.add(invitePasswordInput);
+    m_controls.add(inviteBtn);
+
     Preferences prefs = Preferences.userRoot().node(this.getClass().getName());
 
     String prefix = prefs.get(PREFS_TOURNAMENT_PREFIX, "");
@@ -130,14 +158,18 @@ public class Controller  {
     scoreMode.getItems().addAll(NORMAL_SCORE_MODE_VALUE, FINAL_SCORE_MODE_VALUE);
     scoreMode.setValue(mode);
 
-    String filename = prefs.get(PREFS_GAME_LIST_FILE, "");
-    fileInput.setText(filename);
+    fileInput.setText(prefs.get(PREFS_GAME_LIST_FILE, ""));
 
     p3TournamentPlayersInput.setValue(9);
+    p3UserIdInput.setText(prefs.get(PREFS_3P_USERID, ""));
 
     p4TournamentDivisionInput.setValue(1);
     p4TournamentGroupInput.setValue("A");
     p4TournamentLevelInput.setValue("Emperor");
+    p4UserIdInput.setText(prefs.get(PREFS_4P_USERID, ""));
+
+    inviteFileInput.setText(prefs.get(PREFS_INVITE_FILE, ""));
+    inviteUserIdInput.setText(prefs.get(PREFS_INVITE_USERID, ""));
   }
 
 
@@ -327,6 +359,9 @@ public class Controller  {
           "fields are required.");
       return;
     }
+    Preferences prefs = Preferences.userRoot().node(this.getClass().getName());
+    prefs.put(PREFS_3P_USERID, userId);
+
     int numPlayers = p3TournamentPlayersInput.getValue();
     try {
       String prefix = tournamentNum + ".Small Tournament";
@@ -392,6 +427,9 @@ public class Controller  {
           "are required.");
       return;
     }
+    Preferences prefs = Preferences.userRoot().node(this.getClass().getName());
+    prefs.put(PREFS_4P_USERID, userId);
+
     MabiWebHelper.Level level;
     try {
       level = MabiWebHelper.Level.valueOf(levelValue.toUpperCase());
@@ -450,6 +488,89 @@ public class Controller  {
     }
   }
 
+
+  @FXML
+  public void chooseInviteFile(ActionEvent event) {
+    FileChooser fileChooser = new FileChooser();
+    fileChooser.getExtensionFilters().addAll(
+        new FileChooser.ExtensionFilter("Excel Files", "*.xlsx")
+    );
+
+    File selectedFile = fileChooser.showOpenDialog(((Node)event.getSource()).getScene().getWindow());
+    inviteFileInput.setText(selectedFile.getAbsolutePath());
+
+    Preferences prefs = Preferences.userRoot().node(this.getClass().getName());
+    prefs.put(PREFS_INVITE_FILE, selectedFile.getAbsolutePath());
+  }
+
+
+  @FXML
+  public void sendInvites(@SuppressWarnings("unused") ActionEvent event) {
+
+    String tournamentName = StringUtils.stripToNull(inviteTournamentNameInput.getText());
+    String tournamentPrefix = StringUtils.stripToNull(inviteTournamentPrefixInput.getText());
+    String tournamentSite = StringUtils.stripToNull(inviteTournamentSiteInput.getText());
+    String fileName = StringUtils.stripToNull(inviteFileInput.getText());
+    String userId = StringUtils.stripToNull(inviteUserIdInput.getText());
+    String password = StringUtils.stripToNull(invitePasswordInput.getText());
+
+    if (tournamentName == null || tournamentPrefix == null || fileName == null || userId == null ||
+        password == null) {
+      alert(AlertType.ERROR, "Tournament Name, Tournament Prefix, Invite Excel, " +
+          "User ID and Password fields are required.");
+      return;
+    }
+    Preferences prefs = Preferences.userRoot().node(this.getClass().getName());
+    prefs.put(PREFS_INVITE_USERID, userId);
+
+    Path xlsFile = Paths.get(fileName);
+    if (!Files.exists(xlsFile)) {
+      alert(AlertType.ERROR, fileName + " is not a file!");
+      return;
+    }
+
+    try {
+      InvitationSender invitationSender = new InvitationSender("smtp.strato.de",
+          userId, password, userId, tournamentName, tournamentPrefix, tournamentSite);
+
+      lockInputs();
+      Task<Integer> task = new Task<>() {
+        @Override
+        protected Integer call() throws Exception {
+          invitationSender.readInput(xlsFile);
+          if (invitationSender.getWarnings().size() != 0) {
+            return 1;
+          }
+          invitationSender.findGames();
+          if (invitationSender.getWarnings().size() != 0) {
+            return 1;
+          }
+          invitationSender.sendEmails();
+          return 0;
+        }
+      };
+      task.setOnSucceeded(evt -> {
+        if ((Integer)evt.getSource().getValue() == 1) {
+          alert(AlertType.ERROR, String.join("\n", invitationSender.getWarnings()));
+        } else {
+          alert(AlertType.INFORMATION, "Games created!");
+        }
+        reenableInputs();
+      });
+      task.setOnFailed(evt -> {
+        if (task.getException() instanceof AuthenticationFailedException) {
+          alert(AlertType.ERROR, task.getException().getMessage());
+        } else {
+          alertException(task.getException());
+        }
+        reenableInputs();
+      });
+      new Thread(task).start();
+
+    } catch (Exception ex) {
+      alertException(ex);
+    }
+  }
 
   private boolean confirm(String header, String content) {
     Alert alert = new Alert(AlertType.CONFIRMATION);
