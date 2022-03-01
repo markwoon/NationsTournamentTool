@@ -1,3 +1,16 @@
+## [2.1.0](https://github.com/markwoon/NationsTournamentTool/compare/v2.0.2...v2.1.0) (2022-03-01)
+
+
+### Features
+
+* add support for sending invitiations ([6ab255d](https://github.com/markwoon/NationsTournamentTool/commit/6ab255d8225960e630d5cbad8a759de410e38684))
+
+
+### Bug Fixes
+
+* fix info message ([d0580bc](https://github.com/markwoon/NationsTournamentTool/commit/d0580bca8abc0ca405bcee3c05072424727db82e))
+* remove test prefix ([15b2196](https://github.com/markwoon/NationsTournamentTool/commit/15b21961d0debc832d4fdcba0c19f57e26ac2358))
+
 ### [2.0.2](https://github.com/markwoon/NationsTournamentTool/compare/v2.0.1...v2.0.2) (2022-02-26)
 
 
