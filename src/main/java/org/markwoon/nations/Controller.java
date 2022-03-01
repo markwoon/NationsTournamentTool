@@ -553,7 +553,7 @@ public class Controller  {
         if ((Integer)evt.getSource().getValue() == 1) {
           alert(AlertType.ERROR, String.join("\n", invitationSender.getWarnings()));
         } else {
-          alert(AlertType.INFORMATION, "Games created!");
+          alert(AlertType.INFORMATION, "Emails sent!");
         }
         reenableInputs();
       });
