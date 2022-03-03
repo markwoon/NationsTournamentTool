@@ -1,3 +1,10 @@
+### [2.1.1](https://github.com/markwoon/NationsTournamentTool/compare/v2.1.0...v2.1.1) (2022-03-03)
+
+
+### Bug Fixes
+
+* support dynamic # of players ([0c79ac9](https://github.com/markwoon/NationsTournamentTool/commit/0c79ac974fee464900985c63763e24076eec4524))
+
 ## [2.1.0](https://github.com/markwoon/NationsTournamentTool/compare/v2.0.2...v2.1.0) (2022-03-01)
 
 
