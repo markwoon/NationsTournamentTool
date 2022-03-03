@@ -15,9 +15,6 @@ import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.markwoon.nations.model.Game;
 import org.markwoon.nations.model.PlayerPoints;
@@ -37,10 +34,9 @@ public class NationsUtils {
       DateTimeFormatter.ofPattern("M/d/yyyy H:m");
   public static final DateTimeFormatter DOT_DATE_TIME_FORMATTER =
       DateTimeFormatter.ofPattern("d.M.yyyy H:m");
-  private static final int sf_numPlayers = 3;
 
 
-  private static void writeHeaders(PrintWriter tsvWriter, ExcelWriter xlsWriter) {
+  private static void writeHeaders(PrintWriter tsvWriter, ExcelWriter xlsWriter, int numPlayers) {
     List<String> headers = new ArrayList<>();
     headers.add("Game ID");
     headers.add("Game Name");
@@ -48,7 +44,7 @@ public class NationsUtils {
     headers.add("Started");
     headers.add("Last Updated");
     headers.add("Finished");
-    for (int x = 1; x <= sf_numPlayers; x += 1) {
+    for (int x = 1; x <= numPlayers; x += 1) {
       headers.add("P" + x);
       headers.add("Country");
       headers.add("VP");
@@ -87,7 +83,16 @@ public class NationsUtils {
 
     try (PrintWriter tsvWriter = new PrintWriter(Files.newBufferedWriter(file));
          ExcelWriter xlsWriter = new ExcelWriter("Tournament")) {
-      writeHeaders(tsvWriter, xlsWriter);
+      int numPlayers = 0;
+      if (games.size() > 1) {
+        for (String name : games.keySet()) {
+          Game game = games.get(name);
+          if (numPlayers < game.getPlayers().size()) {
+            numPlayers = game.getPlayers().size();
+          }
+        }
+      }
+      writeHeaders(tsvWriter, xlsWriter, numPlayers);
 
       DecimalFormat decimalFormat = new DecimalFormat();
       decimalFormat.setMaximumFractionDigits(2);
@@ -151,11 +156,11 @@ public class NationsUtils {
       xlsWriter.newRow();
 
       for (String group : totalPoints.keySet()) {
-        newResultRow(tsvWriter, xlsWriter);
+        newResultRow(tsvWriter, xlsWriter, numPlayers);
         writeCell(tsvWriter, xlsWriter, null, "Group " + group);
         boolean started = false;
         for (PlayerPoints pp : new TreeSet<>(totalPoints.get(group).values())) {
-          newResultRow(tsvWriter, xlsWriter);
+          newResultRow(tsvWriter, xlsWriter, numPlayers);
           if (started) {
             writeCell(tsvWriter, xlsWriter, null, pp.toString());
           } else {
@@ -174,19 +179,16 @@ public class NationsUtils {
     }
   }
 
-  private static void newResultRow(PrintWriter tsvWriter, ExcelWriter xlsWriter) {
+  private static void newResultRow(PrintWriter tsvWriter, ExcelWriter xlsWriter, int numPlayers) {
     tsvWriter.println();
     xlsWriter.newRow();
-    for (int x = 0; x < 27; x += 1) {
+    int max = 6 + (numPlayers * 7);
+    for (int x = 0; x < max; x += 1) {
       tsvWriter.print("\t");
       xlsWriter.writeCell("", null);
     }
   }
 
-
-  private static final Pattern sf_tsvPlayerPattern = Pattern.compile("(\\w+)(?: \\((.*?)\\))?");
-  private static final Pattern sf_tsvPlayerStatPattern = Pattern.compile("(\\w+?), (\\d+) unused workers, (\\d+)vp");
-  private static final Pattern sf_tsvFinishedPlayerStatPattern = Pattern.compile("(\\w+?), (\\d+)vp");
 
   private static LocalDateTime parseTime(String text) {
     try {
@@ -209,18 +211,22 @@ public class NationsUtils {
   public static SortedMap<String, Game> readTsv(Path file) throws IOException {
 
     SortedMap<String, Game> games = new TreeMap<>();
-    int format = 2;
     try (BufferedReader reader = Files.newBufferedReader(file)) {
-      int rowNum = 0;
+      int numPlayers = 0;
       String line = reader.readLine();
       if (line != null && line.startsWith("Game ID")) {
-        if (line.contains("Player 1\tPlayer 2")) {
-          format = 1;
+        if (line.contains("\tP6\t")) {
+          numPlayers = 6;
+        } else if (line.contains("\tP5\t")) {
+          numPlayers = 5;
+        } else if (line.contains("\tP4\t")) {
+          numPlayers = 4;
+        } else if (line.contains("\tP3\t")) {
+          numPlayers = 3;
         }
         line = reader.readLine();
       }
       while (line != null) {
-        rowNum += 1;
         String[] cols = splitCsvLine(line);
         if (cols.length == 0 || cols[0] == null || cols[0].trim().equals("")) {
           break;
@@ -235,11 +241,7 @@ public class NationsUtils {
           game.setGameFinished(parseTime(cols[5]));
         }
 
-        if (format == 1) {
-          parseFmt1Players(cols, rowNum, game);
-        } else {
-          parseFmt2Players(cols, game);
-        }
+        parsePlayers(cols, game, numPlayers);
 
         games.put(game.getName(), game);
         line = reader.readLine();
@@ -261,54 +263,10 @@ public class NationsUtils {
   }
 
 
-  private static void parseFmt1Players(String[] cols, int rowNum, Game game) {
-    int maxCol = Math.min(6 + sf_numPlayers, cols.length);
-    List<String[]> players = new ArrayList<>();
-    for (int x = 6; x < maxCol; x += 1) {
-      String player = cols[x];
-      if (player == null) {
-        throw new IllegalArgumentException("Missing player info");
-      }
-      Matcher playerMatcher = sf_tsvPlayerPattern.matcher(player);
-      if (!playerMatcher.matches()) {
-        throw new IllegalArgumentException("Unexpected player data on line " + rowNum + ": '" +
-            cols[x] + "'");
-      }
-      players.add(new String[]{ playerMatcher.group(1), playerMatcher.group(2) });
-    }
-    game.setPlayers(players.stream()
-        .map(p -> p[0])
-        .collect(Collectors.toList()));
-
-    for (String[] data : players) {
-      String player = data[0];
-      String stats = data[1];
-      if (stats != null) {
-        Matcher statMatcher;
-        if (game.isFinished()) {
-          statMatcher = sf_tsvFinishedPlayerStatPattern.matcher(stats);
-        } else {
-          statMatcher = sf_tsvPlayerStatPattern.matcher(stats);
-        }
-        if (!statMatcher.find()) {
-          throw new IllegalArgumentException("Unexpected player stats on line " + rowNum +
-              ": '" + stats + "'");
-        }
-        game.setCountry(player, statMatcher.group(1));
-        if (game.isFinished()) {
-          game.setVp(player, Integer.parseInt(statMatcher.group(2)));
-        } else {
-          game.setUnusedWorkers(player, Integer.parseInt(statMatcher.group(2)));
-          game.setVp(player, Integer.parseInt(statMatcher.group(3)));
-        }
-      }
-    }
-  }
-
-  private static void parseFmt2Players(String[] cols, Game game) {
-    int maxCol = Math.min(6 + (7 * sf_numPlayers), cols.length);
+  private static void parsePlayers(String[] cols, Game game, int numPlayers) {
+    int maxCol = Math.min(6 + (7 * numPlayers), cols.length);
     game.setPlayers(new ArrayList<>());
-    for (int x = 0; x < sf_numPlayers; x += 1) {
+    for (int x = 0; x < numPlayers; x += 1) {
       int colNum = 6 + (7 * x);
       if (colNum >= maxCol) {
         break;

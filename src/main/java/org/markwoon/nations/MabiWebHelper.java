@@ -182,6 +182,11 @@ public class MabiWebHelper {
 
     Element header = Objects.requireNonNull(doc.getElementById("nations-gameheader"));
     String headerPlayerInfo = header.text().substring(header.text().indexOf("Players:") + 8);
+    if (headerPlayerInfo.contains("Player Boards selected for this game:")) {
+      headerPlayerInfo = headerPlayerInfo.substring(0,
+          headerPlayerInfo.indexOf("Player Boards selected for this game:"));
+    }
+    headerPlayerInfo = StringUtils.stripToEmpty(headerPlayerInfo);
     Element lastActions = Objects.requireNonNull(doc.getElementById("last_actions"));
 
     boolean isFinished = header.html().contains("Game finished");
