@@ -308,7 +308,7 @@
             <bottom>
               <ButtonBar prefHeight="40.0" prefWidth="200.0">
                 <buttons>
-                  <Button fx:id="inviteBtn" mnemonicParsing="false" text="Create"
+                  <Button fx:id="inviteBtn" mnemonicParsing="false" text="Invite"
                       ButtonBar.buttonData="RIGHT" onAction="#sendInvites" />
                 </buttons>
                 <padding>
