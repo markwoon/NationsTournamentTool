@@ -1,3 +1,10 @@
+### [2.1.2](https://github.com/markwoon/NationsTournamentTool/compare/v2.1.1...v2.1.2) (2022-03-07)
+
+
+### Bug Fixes
+
+* fix invite button text ([ff53869](https://github.com/markwoon/NationsTournamentTool/commit/ff538698f1edceec6e8e3492c3c4d0b6d5b10ee4))
+
 ### [2.1.1](https://github.com/markwoon/NationsTournamentTool/compare/v2.1.0...v2.1.1) (2022-03-03)
 
 
