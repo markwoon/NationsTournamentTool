@@ -47,10 +47,11 @@ public class InvitationSender {
       "http://www.mabiweb.com/modules.php?name=Game_Manager&op=waiting_games";
   private static final String sf_joinGamePrefix =
       "http://www.mabiweb.com/modules.php?name=GM_Nations&op=join_game_pwd&g_id=";
-  private static final Pattern sf_gameIdPattern = Pattern.compile(" - Game (\\d+)$");
+  private static final Pattern sf_gameNumPattern = Pattern.compile(" - Game (\\d+)$");
   private final List<String> m_warnings = new ArrayList<>();
   private final List<Player> m_players = new ArrayList<>();
-  private final Map<Integer, String> m_gameIds = new HashMap<>();
+  /** Maps tournament game number to MabiWeb game ID. */
+  private final Map<Integer, String> m_gameNumMap = new HashMap<>();
   private final Session m_session;
   private final String m_tournamentName;
   private final String m_tournamentPrefix;
@@ -135,14 +136,14 @@ public class InvitationSender {
       Elements tds = tr.select("td");
       String name = tds.get(2).text();
       if (name.startsWith(m_tournamentPrefix)) {
-        Matcher m = sf_gameIdPattern.matcher(name);
+        Matcher m = sf_gameNumPattern.matcher(name);
         if (m.find()) {
           Integer gameNum = Integer.parseInt(m.group(1));
           String gameId = tds.get(0).text();
           // make sure it's a number
           //noinspection ResultOfMethodCallIgnored
           Integer.parseInt(gameId);
-          m_gameIds.put(gameNum, gameId);
+          m_gameNumMap.put(gameNum, gameId);
         } else {
           m_warnings.add("Found game '" + name + "' but cannot determine game number");
         }
@@ -152,7 +153,7 @@ public class InvitationSender {
     Set<Integer> expectedGameNumbers = m_players.stream()
         .flatMap(p -> p.games.stream())
         .collect(Collectors.toSet());
-    for (Integer gameNum : m_gameIds.keySet()) {
+    for (Integer gameNum : m_gameNumMap.keySet()) {
       expectedGameNumbers.remove(gameNum);
     }
     if (expectedGameNumbers.size() > 0) {
@@ -212,9 +213,9 @@ public class InvitationSender {
     for (int gameNumber : player.games) {
       htmlBuilder.append("<li>");
       textBuilder.append("* ");
-      String gameId = m_gameIds.get(gameNumber);
-      if (gameId != null) {
-        String url = sf_joinGamePrefix + gameId;
+      String gameNum = m_gameNumMap.get(gameNumber);
+      if (gameNum != null) {
+        String url = sf_joinGamePrefix + gameNum;
         htmlBuilder.append("<a href=\"")
             .append(url)
             .append("\">Game ")
