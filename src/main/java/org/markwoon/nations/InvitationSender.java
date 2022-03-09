@@ -65,6 +65,8 @@ public class InvitationSender {
     Properties prop = new Properties();
     prop.put("mail.smtp.auth", true);
     prop.put("mail.smtp.ssl.enable", "true");
+    prop.put("mail.smtp.starttls.enable", "true");
+    prop.put("mail.smtp.ssl.protocols", "TLSv1.2");
     prop.put("mail.smtp.host", smtpServer);
     prop.put("mail.smtp.port", "465");
     prop.put("mail.smtp.ssl.trust", smtpServer);
