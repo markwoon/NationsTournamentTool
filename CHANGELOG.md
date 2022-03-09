@@ -1,3 +1,10 @@
+### [2.1.3](https://github.com/markwoon/NationsTournamentTool/compare/v2.1.2...v2.1.3) (2022-03-09)
+
+
+### Bug Fixes
+
+* specify TLS 1.2 ([d08c3cf](https://github.com/markwoon/NationsTournamentTool/commit/d08c3cf1050905db149429d4bf88e8fab9960fd6))
+
 ### [2.1.2](https://github.com/markwoon/NationsTournamentTool/compare/v2.1.1...v2.1.2) (2022-03-07)
 
 
