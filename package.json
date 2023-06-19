@@ -7,13 +7,12 @@
   },
   "private": true,
   "devDependencies": {
-    "@google/semantic-release-replace-plugin": "^1.1.0",
-    "@semantic-release/changelog": "^6.0.1",
+    "@google/semantic-release-replace-plugin": "^1.2.0",
+    "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "chalk": "^4.1.2",
-    "conventional-changelog-conventionalcommits": "^4.6.3",
-    "eslint": "^8.9.0",
-    "semantic-release": "^19.0.2"
+    "conventional-changelog-conventionalcommits": "^6.1.0",
+    "eslint": "^8.43.0",
+    "semantic-release": "^21.0.5"
   },
   "release": {
     "branches": [
