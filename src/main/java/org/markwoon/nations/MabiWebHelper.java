@@ -443,6 +443,20 @@ public class MabiWebHelper {
     return games;
   }
 
+  public static List<NewGame> buildTournamentGroup3pV2GameList(String name, Level level,
+      int period, int numMatches) {
+    Preconditions.checkNotNull(name);
+    Preconditions.checkArgument(period > 0 && period < 10);
+    Preconditions.checkArgument(numMatches > 0 && numMatches < 100);
+
+    List<NewGame> games = new ArrayList<>();
+    for (int gameNum = 0; gameNum < numMatches; gameNum += 1) {
+      String gameId = period + String.format("%02d", gameNum + 1);
+      games.add(new NewGame(name + " - " + gameId, gameId, level));
+    }
+    return games;
+  }
+
   public static List<NewGame> buildTournamentGroup4pGameList(String prefix, int division,
       String group, Level level) {
     prefix = StringUtils.stripToNull(prefix);

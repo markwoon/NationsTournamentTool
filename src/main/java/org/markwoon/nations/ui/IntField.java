@@ -32,4 +32,9 @@ public class IntField extends TextField {
   public int getValue() {
     return m_value;
   }
+
+  public void setValue(int value) {
+    m_value = value;
+    setText(Integer.toString(m_value));
+  }
 }

@@ -45,6 +45,8 @@ public class Controller  {
   private static final String PREFS_WORKING_DIR = "workingDir";
   private static final String PREFS_GAME_LIST_FILE = "file.gameList";
   private static final String PREFS_3P_USERID = "3p.userId";
+  private static final String PREFS_3PV2_USERID = "3pv2.userId";
+  private static final String PREFS_3PV2_NUM_MATCHES = "3pv2.numMatches";
   private static final String PREFS_4P_USERID = "4p.userId";
   private static final String PREFS_INVITE_FILE = "invite.file";
   private static final String PREFS_INVITE_USERID = "invite.userId";
@@ -77,6 +79,21 @@ public class Controller  {
   private TextField p3PasswordInput;
   @FXML
   private Button p3CreateGamesBtn;
+
+  @FXML
+  private TextField p3v2TournamentNameInput;
+  @FXML
+  private ChoiceBox<String> p3v2TournamentLevelInput;
+  @FXML
+  private ChoiceBox<Integer> p3v2PeriodInput;
+  @FXML
+  private IntField p3v2NumberOfMatchesInput;
+  @FXML
+  private TextField p3v2UserIdInput;
+  @FXML
+  private TextField p3v2PasswordInput;
+  @FXML
+  private Button p3v2CreateGamesBtn;
 
   @FXML
   private IntField p4TournamentNumberInput;
@@ -130,6 +147,14 @@ public class Controller  {
     m_controls.add(p3PasswordInput);
     m_controls.add(p3CreateGamesBtn);
 
+    m_controls.add(p3v2TournamentNameInput);
+    m_controls.add(p3v2TournamentLevelInput);
+    m_controls.add(p3v2PeriodInput);
+    m_controls.add(p3v2NumberOfMatchesInput);
+    m_controls.add(p3v2UserIdInput);
+    m_controls.add(p3v2PasswordInput);
+    m_controls.add(p3v2CreateGamesBtn);
+
     m_controls.add(p4TournamentNumberInput);
     m_controls.add(p4TournamentDivisionInput);
     m_controls.add(p4TournamentGroupInput);
@@ -162,6 +187,11 @@ public class Controller  {
 
     p3TournamentPlayersInput.setValue(9);
     p3UserIdInput.setText(prefs.get(PREFS_3P_USERID, ""));
+
+    p3v2TournamentLevelInput.setValue("Emperor");
+    p3v2PeriodInput.setValue(1);
+    p3v2NumberOfMatchesInput.setValue(Integer.parseInt(prefs.get(PREFS_3PV2_NUM_MATCHES, "1")));
+    p3v2UserIdInput.setText(prefs.get(PREFS_3PV2_USERID, ""));
 
     p4TournamentDivisionInput.setValue(1);
     p4TournamentGroupInput.setValue("A");
@@ -312,7 +342,6 @@ public class Controller  {
     prefs.put(PREFS_SCORE_MODE, scoreMode.getValue());
 
     try {
-      //noinspection UnstableApiUsage
       String baseFilename = com.google.common.io.Files.getNameWithoutExtension(listFileName);
       if (baseFilename.matches("^(.+)_\\d\\d\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d$")) {
         baseFilename = baseFilename.substring(0, baseFilename.length() - 17);
@@ -367,44 +396,46 @@ public class Controller  {
       String prefix = tournamentNum + ".Small Tournament";
       List<MabiWebHelper.NewGame> games =
           MabiWebHelper.buildTournamentGroup3pGameList(prefix, group, numPlayers);
-      StringBuilder builder = new StringBuilder();
-      for (MabiWebHelper.NewGame game : games) {
-        builder.append(game.toString())
-            .append("\n");
-      }
-      builder.append("\n");
-      if (!confirm("Create the following games?", builder.toString())) {
-        return;
-      }
 
-      lockInputs();
-      Task<Integer> task = new Task<>() {
-        @Override
-        protected Integer call() throws Exception {
-          MabiWebHelper mabiWebHelper = new MabiWebHelper();
-          if (!mabiWebHelper.login(userId, password)) {
-            System.out.println("Failed to login");
-            return 1;
-          }
-          for (MabiWebHelper.NewGame game : games) {
-            mabiWebHelper.createGame(game.name, game.password, 3, game.level);
-          }
-          return 0;
-        }
-      };
-      task.setOnSucceeded(evt -> {
-        if ((Integer)evt.getSource().getValue() == 1) {
-          alert(AlertType.WARNING, "Failed to login to MabiWeb.");
-        } else {
-          alert(AlertType.INFORMATION, "Games created!");
-        }
-        reenableInputs();
-      });
-      task.setOnFailed(evt -> {
-        alertException(task.getException());
-        reenableInputs();
-      });
-      new Thread(task).start();
+      createGames(games, userId, password, 3);
+
+    } catch (Exception ex) {
+      alertException(ex);
+    }
+  }
+
+  @FXML
+  public void create3Pv2Games(@SuppressWarnings("unused") ActionEvent event) {
+    String tournamentName = StringUtils.stripToNull(p3v2TournamentNameInput.getText());
+    String levelValue = StringUtils.stripToNull(p3v2TournamentLevelInput.getValue());
+    String userId = StringUtils.stripToNull(p3v2UserIdInput.getText());
+    String password = StringUtils.stripToNull(p3v2PasswordInput.getText());
+
+    if (tournamentName == null || levelValue == null || userId == null ||
+        password == null) {
+      alert(AlertType.ERROR, "Tournament Name, Level, User ID and Password fields " +
+          "are required.");
+      return;
+    }
+    Preferences prefs = Preferences.userRoot().node(this.getClass().getName());
+    prefs.put(PREFS_3PV2_USERID, userId);
+
+    MabiWebHelper.Level level;
+    try {
+      level = MabiWebHelper.Level.valueOf(levelValue.toUpperCase());
+    } catch (IllegalArgumentException ex) {
+      alert(AlertType.ERROR, "Unknown leve '" + levelValue  +"'");
+      return;
+    }
+
+    try {
+      // name - XYY (X = period, Y = match number)
+      int numMatches = p3v2NumberOfMatchesInput.getValue();
+      int period = p3v2PeriodInput.getValue();
+      List<MabiWebHelper.NewGame> games =
+          MabiWebHelper.buildTournamentGroup3pV2GameList(tournamentName, level, period, numMatches);
+
+      createGames(games, userId, password, 3);
 
     } catch (Exception ex) {
       alertException(ex);
@@ -444,44 +475,8 @@ public class Controller  {
           group.toUpperCase();
       List<MabiWebHelper.NewGame> games =
           MabiWebHelper.buildTournamentGroup4pGameList(prefix, division, group, level);
-      StringBuilder builder = new StringBuilder();
-      for (MabiWebHelper.NewGame game : games) {
-        builder.append(game.toString())
-            .append("\n");
-      }
-      builder.append("\n");
-      if (!confirm("Create the following games?", builder.toString())) {
-        return;
-      }
 
-      lockInputs();
-      Task<Integer> task = new Task<>() {
-        @Override
-        protected Integer call() throws Exception {
-          MabiWebHelper mabiWebHelper = new MabiWebHelper();
-          if (!mabiWebHelper.login(userId, password)) {
-            System.out.println("Failed to login");
-            return 1;
-          }
-          for (MabiWebHelper.NewGame game : games) {
-            mabiWebHelper.createGame(game.name, game.password, 4, game.level);
-          }
-          return 0;
-        }
-      };
-      task.setOnSucceeded(evt -> {
-        if ((Integer)evt.getSource().getValue() == 1) {
-          alert(AlertType.WARNING, "Failed to login to MabiWeb.");
-        } else {
-          alert(AlertType.INFORMATION, "Games created!");
-        }
-        reenableInputs();
-      });
-      task.setOnFailed(evt -> {
-        alertException(task.getException());
-        reenableInputs();
-      });
-      new Thread(task).start();
+      createGames(games, userId, password, 4);
 
     } catch (Exception ex) {
       alertException(ex);
@@ -571,6 +566,51 @@ public class Controller  {
       alertException(ex);
     }
   }
+
+
+  public void createGames(List<MabiWebHelper.NewGame> games, String userId, String password,
+      int numPlayers) {
+
+    StringBuilder builder = new StringBuilder();
+    for (MabiWebHelper.NewGame game : games) {
+      builder.append(game.toString())
+          .append("\n");
+    }
+    builder.append("\n");
+    if (!confirm("Create the following games?", builder.toString())) {
+      return;
+    }
+
+    lockInputs();
+    Task<Integer> task = new Task<>() {
+      @Override
+      protected Integer call() throws Exception {
+        MabiWebHelper mabiWebHelper = new MabiWebHelper();
+        if (!mabiWebHelper.login(userId, password)) {
+          System.out.println("Failed to login");
+          return 1;
+        }
+        for (MabiWebHelper.NewGame game : games) {
+          mabiWebHelper.createGame(game.name, game.password, numPlayers, game.level);
+        }
+        return 0;
+      }
+    };
+    task.setOnSucceeded(evt -> {
+      if ((Integer)evt.getSource().getValue() == 1) {
+        alert(AlertType.WARNING, "Failed to login to MabiWeb.");
+      } else {
+        alert(AlertType.INFORMATION, "Games created!");
+      }
+      reenableInputs();
+    });
+    task.setOnFailed(evt -> {
+      alertException(task.getException());
+      reenableInputs();
+    });
+    new Thread(task).start();
+  }
+
 
   private boolean confirm(String header, String content) {
     Alert alert = new Alert(AlertType.CONFIRMATION);

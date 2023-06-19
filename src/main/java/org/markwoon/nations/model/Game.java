@@ -26,7 +26,8 @@ public class Game {
   public static final String ROUND_SETUP = "setup";
   public static final String ROUND_FINISHED = "finished";
   public static final String ROUND_DEAD = "dead";
-  private static final Pattern sf_gameGroupPattern = Pattern.compile("- Group ([A-Za-z0-9]+) -");
+  private static final Pattern sf_gameGroupPatternOld = Pattern.compile("- Group ([A-Za-z0-9]+) -");
+  private static final Pattern sf_gameGroupPatternNew = Pattern.compile("- Game ([0-9]+)");
   private static final Pattern sf_roundPattern = Pattern.compile("\\w+ \\((.*)\\) - ([AB])");
   private final String m_id;
   private final String m_name;
@@ -48,11 +49,16 @@ public class Game {
   public Game(String id, String name) {
     m_id = id;
     m_name = name;
-    Matcher m = sf_gameGroupPattern.matcher(name);
+    Matcher m = sf_gameGroupPatternOld.matcher(name);
     if (m.find()) {
       m_group = m.group(1);
     } else {
-      throw new IllegalArgumentException("Game name doesn't have valid group");
+      m = sf_gameGroupPatternNew.matcher(name);
+      if (m.find()) {
+        m_group = m.group(1);
+      } else {
+        throw new IllegalArgumentException("Game name doesn't have valid group");
+      }
     }
   }
 
