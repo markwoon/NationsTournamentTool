@@ -1,3 +1,10 @@
+## [2.2.0](https://github.com/markwoon/NationsTournamentTool/compare/v2.1.3...v2.2.0) (2023-06-19)
+
+
+### Features
+
+* support new-format 3P games ([e90c6ab](https://github.com/markwoon/NationsTournamentTool/commit/e90c6ab6fbfd08e20860deca67fab9e507c0a4da))
+
 ### [2.1.3](https://github.com/markwoon/NationsTournamentTool/compare/v2.1.2...v2.1.3) (2022-03-09)
 
 
