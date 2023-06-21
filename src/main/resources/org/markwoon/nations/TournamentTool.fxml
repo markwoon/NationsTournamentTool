@@ -1,14 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?><?import java.lang.*?>
+<?xml version="1.0" encoding="UTF-8"?>
+<?import java.lang.*?>
 <?import javafx.collections.FXCollections?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import org.markwoon.nations.ui.GroupField?>
 <?import org.markwoon.nations.ui.IntField?><AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-    prefHeight="320.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1"
+    prefHeight="340.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1"
     xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.markwoon.nations.Controller">
   <StackPane>
-    <TabPane prefHeight="320.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
+    <TabPane prefHeight="340.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
       <tabs>
         <Tab text="Get Game List">
           <BorderPane xmlns:fx="http://javafx.com/fxml">
@@ -370,18 +371,30 @@
                     GridPane.rowIndex="3" GridPane.columnIndex="2"
                     onAction="#chooseInviteFile" />
 
+                <Label text="Time Frame:"
+                    GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                <ChoiceBox fx:id="inviteTimeFrameInput"
+                    GridPane.rowIndex="4" GridPane.columnIndex="1">
+                  <items>
+                    <FXCollections fx:factory="observableArrayList">
+                      <String fx:value="48 hours" />
+                      <String fx:value="7 days" />
+                    </FXCollections>
+                  </items>
+                </ChoiceBox>
+
                 <!-- spacer -->
                 <Label
-                    GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                    GridPane.rowIndex="5" GridPane.columnIndex="0" />
 
                 <Label text="SMTP User ID/Email:"
-                    GridPane.rowIndex="5" GridPane.columnIndex="0" />
-                <TextField fx:id="inviteUserIdInput"
-                    GridPane.rowIndex="5" GridPane.columnIndex="1" />
-                <Label text="SMTP Password:"
                     GridPane.rowIndex="6" GridPane.columnIndex="0" />
-                <TextField fx:id="invitePasswordInput"
+                <TextField fx:id="inviteUserIdInput"
                     GridPane.rowIndex="6" GridPane.columnIndex="1" />
+                <Label text="SMTP Password:"
+                    GridPane.rowIndex="7" GridPane.columnIndex="0" />
+                <TextField fx:id="invitePasswordInput"
+                    GridPane.rowIndex="7" GridPane.columnIndex="1" />
 
               </GridPane>
             </center>

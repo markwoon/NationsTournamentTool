@@ -49,6 +49,7 @@ public class Controller  {
   private static final String PREFS_3PV2_NUM_MATCHES = "3pv2.numMatches";
   private static final String PREFS_4P_USERID = "4p.userId";
   private static final String PREFS_INVITE_FILE = "invite.file";
+  private static final String PREFS_INVITE_TIME_FRAME = "invite.timeFrame";
   private static final String PREFS_INVITE_USERID = "invite.userId";
   private static final String PREFS_SCORE_MODE = "scoreMode";
   private static final String NORMAL_SCORE_MODE_VALUE = "Normal";
@@ -119,6 +120,8 @@ public class Controller  {
   @FXML
   private TextField inviteFileInput;
   @FXML
+  private ChoiceBox<String> inviteTimeFrameInput;
+  @FXML
   private TextField inviteUserIdInput;
   @FXML
   private TextField invitePasswordInput;
@@ -167,6 +170,7 @@ public class Controller  {
     m_controls.add(inviteTournamentPrefixInput);
     m_controls.add(inviteTournamentSiteInput);
     m_controls.add(inviteFileInput);
+    m_controls.add(inviteTimeFrameInput);
     m_controls.add(inviteUserIdInput);
     m_controls.add(invitePasswordInput);
     m_controls.add(inviteBtn);
@@ -198,6 +202,7 @@ public class Controller  {
     p4TournamentLevelInput.setValue("Emperor");
     p4UserIdInput.setText(prefs.get(PREFS_4P_USERID, ""));
 
+    inviteTimeFrameInput.setValue(prefs.get(PREFS_INVITE_TIME_FRAME, "48 hours"));
     inviteFileInput.setText(prefs.get(PREFS_INVITE_FILE, ""));
     inviteUserIdInput.setText(prefs.get(PREFS_INVITE_USERID, ""));
   }
@@ -526,7 +531,8 @@ public class Controller  {
 
     try {
       InvitationSender invitationSender = new InvitationSender("smtp.strato.de",
-          userId, password, userId, tournamentName, tournamentPrefix, tournamentSite);
+          userId, password, userId, tournamentName, tournamentPrefix, tournamentSite,
+          inviteTimeFrameInput.getValue());
 
       lockInputs();
       Task<Integer> task = new Task<>() {

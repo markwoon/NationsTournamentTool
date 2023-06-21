@@ -57,10 +57,11 @@ public class InvitationSender {
   private final String m_tournamentPrefix;
   private final String m_tournamentSite;
   private final String m_senderEmail;
+  private final String m_timeFrame;
 
 
   public InvitationSender(String smtpServer, String userId, String password, String senderEmail,
-      String tournamentName, String tournamentPrefix, String tournamentSite) {
+      String tournamentName, String tournamentPrefix, String tournamentSite, String timeFrame) {
 
     Properties prop = new Properties();
     prop.put("mail.smtp.auth", true);
@@ -81,6 +82,7 @@ public class InvitationSender {
     m_tournamentName = tournamentName;
     m_tournamentPrefix = tournamentPrefix;
     m_tournamentSite = tournamentSite;
+    m_timeFrame = timeFrame;
   }
 
 
@@ -179,7 +181,7 @@ public class InvitationSender {
     message.setFrom(new InternetAddress(m_senderEmail));
     message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(player.email));
     message.setSubject(m_tournamentName +
-        " - Games created, please join your games in the next 48 hours!");
+        " - Games created, please join your games in the next " + m_timeFrame + "!");
 
     StringBuilder textBuilder = new StringBuilder()
         .append("Hi ")
@@ -187,9 +189,10 @@ public class InvitationSender {
         .append(",\n\nGames for ")
         .append(m_tournamentName)
         .append(" have been created!\n\n")
+        .append("Please join your games via the links below in the next ")
+        .append(m_timeFrame)
+        .append(".\n\n")
         .append("""
-            Please join your games via the links below in the next 48 hours.
-
             The password for each game is the tournament game number (e.g. Game 210 = password 210).
             
             Your games:
@@ -201,10 +204,10 @@ public class InvitationSender {
         .append(",</p><p>Games for ")
         .append(m_tournamentName)
         .append(" have been created!</p>")
+        .append("<p><b>Please join your games via the links below in the next ")
+        .append(m_timeFrame)
+        .append(".</b></p>")
         .append("""
-            <p>
-            <b>Please join your games via the links below in the next 48 hours.</b>
-            </p>
             <p>
             The password for each game is the tournament game number (e.g. Game 210 = password 210).
             </p>
