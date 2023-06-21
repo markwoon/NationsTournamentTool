@@ -1,3 +1,10 @@
+## [2.2.1](https://github.com/markwoon/NationsTournamentTool/compare/v2.2.0...v2.2.1) (2023-06-21)
+
+
+### Bug Fixes
+
+* add time frame field when sending invites ([696767b](https://github.com/markwoon/NationsTournamentTool/commit/696767bbfd3dc4df3f515c50f3cad7cadb637f2f))
+
 ## [2.2.0](https://github.com/markwoon/NationsTournamentTool/compare/v2.1.3...v2.2.0) (2023-06-19)
 
 
